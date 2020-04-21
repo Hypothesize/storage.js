@@ -1,0 +1,33 @@
+{
+	"name": "hypothesize-repository",
+	"version": "1.0.0",
+	"description": "Database access through the repository pattern in Javascript/TypeScript",
+	"main": "./lib/index.js",
+	"types": "./lib/index.d.ts",
+	"scripts": {
+		"test": "mocha test\\",
+		"build": "tsc"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Hypothesize/repository.ts.git"
+	},
+	"files": [
+		"lib/**/*"
+	],
+	"keywords": [
+		"repository",
+		"postgres",
+		"hypothesize",
+		"database"
+	],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/Hypothesize/repository.ts/issues"
+	},
+	"homepage": "https://github.com/Hypothesize/repository.ts#readme",
+	"devDependencies": {
+		"typescript": "^3.8.3"
+	}
+}
