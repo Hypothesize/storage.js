@@ -3,12 +3,9 @@ import * as bcrypt from "bcryptjs"
 import * as assert from 'assert'
 
 import { generate as generateRepository } from "./repository"
-import { NotImplemented as NotImplementedError } from "./errors"
-import { entityDefaults } from "./constants"
 import { String__ } from "./stdlib"
 
-
-type DTOsMap = Entities.DTOsMap
+type DTOsMap = Hypothesize.Entities.Map
 
 export const Repository = generateRepository(class {
 	readonly db: pgPromise.IDatabase<any>
@@ -75,9 +72,9 @@ export const Repository = generateRepository(class {
 	}
 
 	extensions = {
-		authenticateAsync: async (credentials: { email: string, pwd: string }): Promise<Entities.User.DTO.Extended | undefined> => {
+		authenticateAsync: async (credentials: { email: string, pwd: string }): Promise<Hypothesize.Entities.User.FromStorage | undefined> => {
 			const dbUsers = await this.getAsync({
-				entity: "user",
+				entity: "users",
 				parentId: "",
 				filter: { filters: [{ fieldName: "emailAddress", operator: "equal", value: credentials.email }] }
 			})
@@ -95,26 +92,25 @@ export const Repository = generateRepository(class {
 				})
 			})
 		},
-		registerAsync: async (args: Entities.User.DTO & { password: string }): Promise<Entities.User.DTO.Extended> => {
+		registerAsync: async (args: Hypothesize.Entities.User.ForStorage & { password: string }): Promise<Hypothesize.Entities.User.FromStorage> => {
 			const { password, ...user } = args
 			const salt = bcrypt.genSaltSync()
 			const pwdHash = bcrypt.hashSync(password, salt)
-			const userToBeRegistered: Entities.User.DTO = {
-				...entityDefaults.user,
+			const userToBeRegistered: Hypothesize.Entities.User.ForStorage = {
 				...user,
 				pwdHash: pwdHash,
 				pwdSalt: salt
 			}
-			return await this.saveAsync({ entity: "user", obj: userToBeRegistered, mode: "insert" })
+			return await this.saveAsync({ entity: "users", obj: userToBeRegistered, mode: "insert" })
 		},
 
-		unregisterAsync: async (id: string) => this.deleteAsync({ entity: "user", id }),
+		unregisterAsync: async (id: string) => this.deleteAsync({ entity: "users", id }),
 
-		findUserAsync: async (userid: string) => this.findAsync({ entity: "user", id: userid }),
+		findUserAsync: async (userid: string) => this.findAsync({ entity: "users", id: userid }),
 		//getUsersAsync: async (role: User["role"]) => this.getAsync("user", { role }),
-		updateUserAsync: async (obj: Entities.User.DTO) => this.saveAsync({ entity: "user", obj, mode: "update" }),
+		updateUserAsync: async (obj: Hypothesize.Entities.User.ForStorage) => this.saveAsync({ entity: "users", obj, mode: "update" }),
 
-		insertResultsAsync: async (results: DTOsMap["result"]["toStorage"][]) => { throw new NotImplementedError(`insertResultsAsync`) },
+		insertResultsAsync: async (results: DTOsMap["results"]["toStorage"][]) => { throw new Error(`insertResultsAsync not implemented`) },
 		deleteResultsAsync: async (analysisId: string) => {
 		}
 	}

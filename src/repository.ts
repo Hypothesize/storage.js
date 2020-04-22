@@ -1,65 +1,67 @@
 import { Object__ as Object } from "./stdlib"
 
+type DTOsMap = Hypothesize.Entities.Map
+
 export interface RepositoryGroup<X = {}> {
-	projects: Repository<"project">
-	tables: Repository<"table">
-	analyses: Repository<"analysis">
-	columns: RepositoryEditable<"column">
-	results: RepositoryReadonly<"result">
+	projects: Repository<"projects">
+	tables: Repository<"tables">
+	analyses: Repository<"analyses">
+	columns: RepositoryEditable<"columns">
+	results: RepositoryReadonly<"results">
 	extensions: X
 }
 
-type ToStore<E extends keyof Entities.DTOsMap> = Entities.DTOsMap[E]["stored"]
-type FromStore<E extends keyof Entities.DTOsMap> = Entities.DTOsMap[E]["extended"]
+type ToStore<E extends keyof DTOsMap> = DTOsMap[E]["toStorage"]
+type FromStore<E extends keyof DTOsMap> = DTOsMap[E]["fromStorage"]
 
-export interface RepositoryReadonly<E extends keyof Entities.DTOsMap> {
+export interface RepositoryReadonly<E extends keyof DTOsMap> {
 	/** find one entity object with a specific id, throws exception if not found */
 	findAsync(id: string): Promise<FromStore<E>>
 
 	/** get entity objects with optional parent and additional filters ... */
-	getAsync(args: { parentId: string, filters?: Data.FilterGroup<FromStore<E>> }): Promise<FromStore<E>[]>
+	getAsync(args: { parentId: string, filters?: Hypothesize.Data.FilterGroup<FromStore<E>> }): Promise<FromStore<E>[]>
 }
 
-export interface RepositoryEditable<E extends keyof Entities.DTOsMap> extends RepositoryReadonly<E> {
+export interface RepositoryEditable<E extends keyof DTOsMap> extends RepositoryReadonly<E> {
 	saveAsync: (obj: ToStore<E>) => Promise<FromStore<E>>
 }
 
-export interface Repository<E extends keyof Entities.DTOsMap> extends RepositoryEditable<E> {
-	deleteAsync: (id: string | number) => Promise<void>
+export interface Repository<E extends keyof DTOsMap> extends RepositoryEditable<E> {
+	deleteAsync: (id: string) => Promise<void>
 }
 
 
 export interface IOProvider<X = {}> {
 	/** find one entity object, throws exception if not found */
-	findAsync: <E extends keyof Entities.DTOsMap>(args: { entity: E, id: string }) => Promise<FromStore<E>>
+	findAsync: <E extends keyof DTOsMap>(args: { entity: E, id: string }) => Promise<FromStore<E>>
 
 	/** get a set of entity objects */
-	getAsync: <E extends keyof Entities.DTOsMap>(args: { entity: E, parentId?: string, filters?: Data.FilterGroup<FromStore<E>> }) => Promise<FromStore<E>[]>
+	getAsync: <E extends keyof DTOsMap>(args: { entity: E, parentId?: string, filters?: Hypothesize.Data.FilterGroup<FromStore<E>> }) => Promise<FromStore<E>[]>
 
-	saveAsync: <E extends keyof Entities.DTOsMap>(args: { entity: E, obj: ToStore<E>, mode: "insert" | "update" }) => Promise<FromStore<E>>
-	deleteAsync: <E extends keyof Entities.DTOsMap>(args: { entity: E, id: string }) => Promise<void>
+	saveAsync: <E extends keyof DTOsMap>(args: { entity: E, obj: ToStore<E>, mode: "insert" | "update" }) => Promise<FromStore<E>>
+	deleteAsync: <E extends keyof DTOsMap>(args: { entity: E, id: string }) => Promise<void>
 
 	extensions: X
 }
 
-export function generate<C, X>(ioProviderClass: Ctor<C, IOProvider<X>>): new (config: C) => RepositoryGroup<X> {
+export function generate<C, X>(ioProviderClass: Hypothesize.Ctor<C, IOProvider<X>>): new (config: C) => RepositoryGroup<X> {
 	return class {
 		readonly io: Readonly<IOProvider<X>>
 
 		constructor(config: C) {
 			try {
-				this.io = Object.freeze(new ioProviderClass(config))
+				this.io = new ioProviderClass(config)
 			}
 			catch (err) {
 				throw new Error(`Repository group constructor : ${err} `)
 			}
-			console.assert(this.io, `Repository group this.io after construction is still undefined`)
+			console.assert(this.io !== undefined, `Repository group this.io after construction is still undefined`)
 		}
 
-		protected createRepository<E extends keyof Entities.DTOsMap>(e: E, methods?: (keyof Repository<E>)[]) {
+		protected createRepository<E extends keyof DTOsMap>(e: E, methods?: (keyof Repository<E>)[]) {
 			return {
 				findAsync: async (id: string) => this.io.findAsync({ entity: e, id: id }),
-				getAsync: async (selector?: { parentId?: string, filters?: Data.FilterGroup<FromStore<E>> }) => {
+				getAsync: async (selector?: { parentId?: string, filters?: Hypothesize.Data.FilterGroup<FromStore<E>> }) => {
 					return this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
 				},
 				saveAsync: async (obj: ToStore<E>) => {
@@ -72,18 +74,18 @@ export function generate<C, X>(ioProviderClass: Ctor<C, IOProvider<X>>): new (co
 			}
 		}
 
-		projects = this.createRepository("project")
+		projects = this.createRepository("projects")
 
-		tables = this.createRepository("table")
+		tables = this.createRepository("tables")
 
-		analyses = this.createRepository("analysis")
+		analyses = this.createRepository("analyses")
 
 		columns = {
-			...this.createRepository("column"),
+			...this.createRepository("columns"),
 			deleteAsync: undefined
 		}
 		results = {
-			...this.createRepository("result"),
+			...this.createRepository("results"),
 			saveAsync: undefined,
 			deleteAsync: undefined
 		}

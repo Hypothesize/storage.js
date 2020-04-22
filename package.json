@@ -28,13 +28,17 @@
 	},
 	"homepage": "https://github.com/Hypothesize/repository.ts#readme",
 	"devDependencies": {
+		"@types/assert": "^1.4.6",
 		"@types/lodash": "^4.14.150",
 		"assert": "^2.0.0",
 		"typescript": "^3.8.3"
 	},
 	"dependencies": {
+		"@types/bcryptjs": "^2.4.2",
+		"@types/shortid": "0.0.29",
 		"bcryptjs": "^2.4.3",
 		"lodash": "^4.17.15",
-		"pg-promise": "8.4.6"
+		"pg-promise": "8.4.6",
+		"shortid": "^2.2.15"
 	}
 }
