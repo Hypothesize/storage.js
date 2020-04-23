@@ -6,6 +6,7 @@ import { generate as generateRepository } from "./repository"
 import { String__ } from "./stdlib"
 
 type DTOsMap = Hypothesize.Entities.Map
+type Obj<TValue = any, TKey extends string = string> = { [key in TKey]: TValue }
 
 export const Repository = generateRepository(class {
 	readonly db: pgPromise.IDatabase<any>
@@ -26,23 +27,23 @@ export const Repository = generateRepository(class {
 	 * @param parentId Basic parent id filter
 	 * @param filter Additional custom filter(s)
 	 */
-	async getAsync<E extends keyof DTOsMap>(args: { entity: E, parentId: string, filter: Data.FilterGroup<DTOsMap[E]["fromStorage"]> }): Promise<DTOsMap[E]["fromStorage"][]> {
+	async getAsync<E extends keyof DTOsMap>(args: { entity: E, parentId?: string, filters?: Hypothesize.Data.FilterGroup<DTOsMap[E]["fromStorage"]> }): Promise<DTOsMap[E]["fromStorage"][]> {
 		const pgFnName = `get_${getTableName(args.entity)}`
-		const whereClause = args.filter ? getWhereClause(args.filter) : `1=1`
-		console.log(`where clause for ${JSON.stringify(args.filter)} = ${whereClause}`)
+		const whereClause = args.filters ? getWhereClause(args.filters) : `1=1`
+		console.log(`where clause for ${JSON.stringify(args.filters)} = ${whereClause}`)
 
 		const dbObjects = await this.db.any(`SELECT * FROM ${pgFnName}('${args.parentId}') WHERE ${whereClause}`)
 		return dbObjects.map(obj => ({ ...dbToApp<E>(args.entity, obj) }))
 	}
 
-	async saveAsync<E extends keyof DTOsMap>(args: { entity: E, obj: DTOsMap[E]["toStorage"], mode: "insert" | "update" }): Promise<Entities.DTOsMap[E]["fromStorage"]> {
+	async saveAsync<E extends keyof DTOsMap>(args: { entity: E, obj: DTOsMap[E]["toStorage"], mode: "insert" | "update" }): Promise<DTOsMap[E]["fromStorage"]> {
 		if (!args.obj)
 			throw new Error(`PGRepository updateAsync(): Object to update is missing`)
 
 		if (args.mode === "insert") {
-			const keys = Object.keys(args.obj)
+			const keys = Object.keys(args.obj) as (keyof Hypothesize.Entities.Map[E]["toStorage"])[]
 			const values = keys.map(key => args.obj[key]).join(",")
-			const columns = keys.map(k => new String__(k).toSnakeCase()).join(",")
+			const columns = keys.map(k => new String__(k.toString()).toSnakeCase()).join(",")
 			const query = `insert into ${args.entity} (${columns}) values (${values}) returning *`
 			const insertedObj = await this.db.one<DTOsMap[E]["fromStorage"]>(query)
 			return insertedObj
@@ -51,15 +52,15 @@ export const Repository = generateRepository(class {
 			if (!args.obj.id)
 				throw new Error(`PGRepository updateAsync(): Object Id property missing`)
 
-			let keys = Object.keys(args.obj)
+			let keys = Object.keys(args.obj) as (keyof Hypothesize.Entities.Map[E]["toStorage"])[]
 			let assignmentsClause = keys
 				.filter(key => key.toString() !== "id")
-				.map((key, index) => `${new String__(key).toSnakeCase()} = $${index + 1}`).join(', ')
+				.map((key, index) => `${new String__(key.toString()).toSnakeCase()} = $${index + 1}`).join(', ')
 
 			let stmt = `update ${args.entity} set ${assignmentsClause} where id=$${keys.length} returning id`
 			console.log(`PgDbContext: update sql to be executed: "${stmt}", with params ${keys.map(k => args.obj[k])}`)
 
-			let datum = await this.db.one<DTOsMap[E]["fromStorage"]>({ text: stmt, values: keys.map(key => args.obj[key.toString()]) })
+			let datum = await this.db.one<DTOsMap[E]["fromStorage"]>({ text: stmt, values: keys.map(key => args.obj[key]) })
 
 			return datum
 		}
@@ -76,7 +77,7 @@ export const Repository = generateRepository(class {
 			const dbUsers = await this.getAsync({
 				entity: "users",
 				parentId: "",
-				filter: { filters: [{ fieldName: "emailAddress", operator: "equal", value: credentials.email }] }
+				filters: { filters: [{ fieldName: "emailAddress", operator: "equal", value: credentials.email }] }
 			})
 			const dbUser = dbUsers[0]
 			if (!dbUser) return undefined
@@ -141,19 +142,20 @@ export const Repository = generateRepository(class {
 })
 
 
-function getTableName(entityName: keyof Entities.DTOsMap): string {
-	return new String__(entityName).plural().toLocaleLowerCase()
+function getTableName(entityName: keyof DTOsMap): string {
+	const plural = new String__(entityName).plural() as String
+	return plural.toLocaleLowerCase()
 }
 function getColumnName(propertyName: string): string {
 	return new String__(propertyName).toSnakeCase().toLocaleLowerCase()
 }
 
-function getWhereClause(filter: Data.FilterGroup<any>): string {
-	const quoteValue = (x: Primitive | null) => typeof x === "number" ? `${x}` : `'${x}'`
+function getWhereClause(filter: Hypothesize.Data.FilterGroup<any>): string {
+	const quoteValue = (x: Hypothesize.Primitive | null) => typeof x === "number" ? `${x}` : `'${x}'`
 	//console.log(`quoteValue: ${quoteValue}`)
 
 
-	const expressionTemplates: Obj<undefined | ((x: Primitive | null) => string), Required<Data.Filter>["operator"]> = {
+	const expressionTemplates: Obj<undefined | ((x: Hypothesize.Primitive | null) => string), Required<Hypothesize.Data.Filter>["operator"]> = {
 		equal: x => `= ${quoteValue(x)}`,
 		not_equal: x => `<> ${quoteValue(x)}`,
 		greater: x => `> ${quoteValue(x)}`,
@@ -172,7 +174,7 @@ function getWhereClause(filter: Data.FilterGroup<any>): string {
 			if ('fieldName' in f) { // this is a Filter object, not a FilterGroup
 				let exprTemplate = expressionTemplates[f.operator]
 				if (exprTemplate === undefined)
-					throw new NotImplementedError(`SQL Filtering operator "${f.operator}"`)
+					throw new Error(`SQL Filtering operator "${f.operator}"`)
 				return `${f.negated ? "NOT " : ""}${getColumnName(f.fieldName)} ${exprTemplate(f.value)}`
 			}
 			else {
@@ -203,29 +205,11 @@ function dbToApp<T extends keyof DTOsMap>(entity: T, serverObj: any) {
 	})
 	return appObject as DTOsMap[T]["fromStorage"]
 }
-function cloneToCase(obj: Obj, tocase: "camel" | "snake") {
-	if (!obj) return obj
-	if (typeof obj !== "object")
-		throw new Error(`Invalid obj argument type ${typeof obj}; expected "object", "null", or "undefined"`)
-	if (typeof tocase !== "string")
-		throw new Error(`Invalid tocase argument type ${typeof tocase}; expected "string"`);
-
-	let result = {} as Obj
-	Object.keys(obj).map(key => {
-		let val = obj[key]
-		let newKey = tocase === "camel"
-			? new String__(key).toCamelCase().toString()
-			: new String__(key).toSnakeCase().toString()
-		result[newKey] = (typeof val === "object") ? cloneToCase(val, tocase) : val
-	})
-	return result
-}
-
 
 export const testSuite = () => {
 	describe("getWhereClause", () => {
 		it("should return a two single conditions when passing an array of two filters", () => {
-			const filter: Data.FilterGroup = {
+			const filter: Hypothesize.Data.FilterGroup = {
 				combinator: "and",
 				filters: [
 					{
@@ -247,7 +231,7 @@ export const testSuite = () => {
 			assert.equal(actualWhereClause, expectedWhereClause)
 		})
 		it("should return a single condition and another with two conditions nested when passing an array of a filter and a filterGroup", () => {
-			const filter: Data.FilterGroup = {
+			const filter: Hypothesize.Data.FilterGroup = {
 				combinator: "and",
 				filters: [
 					{
@@ -280,7 +264,7 @@ export const testSuite = () => {
 			assert.equal(actualWhereClause, expectedWhereClause)
 		})
 		it("should return a condition with a sql string matching when passing a filter with 'contains' or related operators", () => {
-			const filter: Data.FilterGroup = {
+			const filter: Hypothesize.Data.FilterGroup = {
 				combinator: "and",
 				filters: [
 					{
@@ -302,14 +286,14 @@ export const testSuite = () => {
 			assert.equal(actualWhereClause, expectedWhereClause)
 		})
 		it("should return a sql condition that checks if is NULL when passing a filter with 'blank' operator", () => {
-			const filter: Data.FilterGroup = {
+			const filter: Hypothesize.Data.FilterGroup = {
 				combinator: "and",
 				filters: [
 					{
 						fieldName: "description",
 						operator: "equals" as any,
 						negated: false
-					} as Data.Filters.Categorical<any>
+					} as Hypothesize.Data.Filters.Categorical<any>
 				]
 			}
 			const actualWhereClause = getWhereClause(filter)

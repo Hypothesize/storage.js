@@ -1,4 +1,4 @@
-import * as Http from "./web"
+import { getAsync, postAsync, putAsync, deleteAsync, checkStatusCode, GetRequest } from "./web"
 import { String__ } from "./stdlib"
 import * as shortid from "shortid"
 import { generate as generateRepoGroup } from "./repository"
@@ -15,10 +15,9 @@ export class Repository extends generateRepoGroup(class {
 	}
 	async findAsync<E extends keyof DTOsMap>(args: { entity: E, id: string }): Promise<DTOsMap[E]["fromStorage"]> {
 		const entityPluralName = new String__(args.entity).plural()
-		return Http
-			.getAsync({ uri: `${this._baseUrl}/${entityPluralName}/${args.id}/` })
+		return getAsync({ uri: `${this._baseUrl}/${entityPluralName}/${args.id}/` })
 			.then(res => {
-				Http.checkStatusCode(res, `Error finding ${args.entity} with id ${args.id} data`)
+				checkStatusCode(res, `Error finding ${args.entity} with id ${args.id} data`)
 				return JSON.parse(res.body) as DTOsMap[E]["fromStorage"]
 			})
 	}
@@ -30,14 +29,14 @@ export class Repository extends generateRepoGroup(class {
 		const effectiveParentId = parentEntity !== "" ? args.parentId : ""
 		const pluralEntity = new String__(args.entity).plural()
 
-		const request: Http.GetRequest = {
+		const request: GetRequest = {
 			uri: [this._baseUrl, pluralParent, effectiveParentId, pluralEntity].filter(x => x !== "").join("/"),
 			query: args.filters ? { filter: JSON.stringify(args.filters) } : undefined
 		}
 		console.log(`API repository getAsync(); request: ${JSON.stringify(request)}`)
 
-		return Http.getAsync(request).then((res: any) => {
-			Http.checkStatusCode(res, `Error retrieving data`)
+		return getAsync(request).then((res: any) => {
+			checkStatusCode(res, `Error retrieving data`)
 			return JSON.parse(res.body) as DTOsMap[E]["fromStorage"][]
 		})
 	}
@@ -45,34 +44,32 @@ export class Repository extends generateRepoGroup(class {
 		const entityPluralName = new String__(args.entity).plural()
 
 		if (args.mode === "insert") {
-			return Http
-				.postAsync({
-					uri: `${this._baseUrl}/api/${entityPluralName}/`,
-					data: { type: "json", body: args.obj as Obj }
-				}).then(res => {
-					Http.checkStatusCode(res, `Error inserting ${entityPluralName} data`)
-					return JSON.parse(res.body) as DTOsMap[E]["fromStorage"]
-				})
+			return postAsync({
+				uri: `${this._baseUrl}/api/${entityPluralName}/`,
+				data: { type: "json", body: args.obj as Obj }
+			}).then(res => {
+				checkStatusCode(res, `Error inserting ${entityPluralName} data`)
+				return JSON.parse(res.body) as DTOsMap[E]["fromStorage"]
+			})
 		}
 		else {
-			return Http
-				.putAsync({
-					uri: `${this._baseUrl}/api/${entityPluralName}/`,
-					data: { type: "json", body: args.obj as Obj }
-				}).then(res => {
-					Http.checkStatusCode(res, `Error updating ${entityPluralName} data`)
-					return JSON.parse(res.body) as DTOsMap[E]["fromStorage"]
-				})
+			return putAsync({
+				uri: `${this._baseUrl}/api/${entityPluralName}/`,
+				data: { type: "json", body: args.obj as Obj }
+			}).then(res => {
+				checkStatusCode(res, `Error updating ${entityPluralName} data`)
+				return JSON.parse(res.body) as DTOsMap[E]["fromStorage"]
+			})
 		}
 	}
 	async deleteAsync<E extends keyof DTOsMap>(args: { entity: E, id: any }): Promise<void> {
 		const entityPluralName = new String__(args.entity).plural()
-		const res = await Http.deleteAsync({ uri: `${this._baseUrl}/${entityPluralName}/${args.id}` })
-		Http.checkStatusCode(res, `Error deleting ${entityPluralName} data`)
+		const res = await deleteAsync({ uri: `${this._baseUrl}/${entityPluralName}/${args.id}` })
+		checkStatusCode(res, `Error deleting ${entityPluralName} data`)
 	}
 
 	protected getPresignedS3UrlAsync(key?: string) {
-		return Http.getAsync({
+		return getAsync({
 			uri: `${this._baseUrl}/presigned_s3_url`,
 			query: key ? { key } : undefined
 		}).then(res => res.body)
@@ -87,7 +84,7 @@ export class Repository extends generateRepoGroup(class {
 		storeRawAsync: async (data: ArrayBuffer | Obj, key?: string, prefix?: string): Promise<string> => {
 			const _key = key ?? shortid.generate()
 			try {
-				await Http.putAsync({
+				await putAsync({
 					uri: await this.getPresignedS3UrlAsync(_key),
 					data: {
 						type: "text",
@@ -109,7 +106,7 @@ export class Repository extends generateRepoGroup(class {
 		 */
 		getRawAsync: async (url: string): Promise<any> => {
 			try {
-				const resultMsg = await Http.getAsync({ uri: url })
+				const resultMsg = await getAsync({ uri: url })
 				return JSON.parse(resultMsg.body)
 			}
 			catch (err) {

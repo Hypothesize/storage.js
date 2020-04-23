@@ -165,7 +165,7 @@ export class Object__ extends global.Object {
 	}
 }
 
-export class String__ extends global.String {
+export class String__ extends String {
 	constructor(str: string) {
 		super(str)
 	}
@@ -182,13 +182,13 @@ export class String__ extends global.String {
 			let str = new String__(this[index])
 			console.assert(str, `String.getCharacters(): new String is undefined`)
 
-			_arr[index] = str
+			_arr.set({ index: index, value: str })
 		}
 
 		return _arr
 	}
 
-	getArrayFromCsv<T extends Primitive2>(): Array__<T> {
+	getArrayFromCsv<T extends Hypothesize.Primitive2>(): Array__<T> {
 		const _arr = new Array__<T>()
 		if (this[0] !== "," || this[this.length - 1] !== ",") {
 			throw new Error("The string is not properly formatted")
@@ -287,6 +287,11 @@ export class String__ extends global.String {
 
 	toSnakeCase() {
 		return new String__(this.tokenizeWords("upper", ["-", "_", " ", "    ", "\t"]).join("_"))
+	}
+	toCamelCase() {
+		return this.replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
+			return index === 0 ? word.toLowerCase() : word.toUpperCase();
+		}).replace(/\s+/g, '');
 	}
 	toSpace() {
 		return new String__(this.tokenizeWords("upper", ["-", "_", " ", "    ", "\t"]).join(" "))
@@ -459,7 +464,7 @@ export class Number__ extends global.Number {
 export abstract class Collection<TValue> implements Iterable<TValue> {
 	[Symbol.iterator]: () => Iterator<TValue>
 
-	length: number
+	length: number = 0
 	abstract getArray(): TValue[];
 	abstract getObject(): Obj<TValue>;
 
