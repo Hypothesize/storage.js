@@ -3,7 +3,7 @@ import { Repository as generateApiRepository } from "./api-repository";
 export declare const Greeter: (name: string) => string;
 export declare const repository: typeof generate;
 export declare const ApiRepository: typeof generateApiRepository;
-export declare const PgRepository: new (config: string) => import("./repository").RepositoryGroup<{
+export declare const PgRepository: new (config: string) => RepositoryGroup<{
     authenticateAsync: (credentials: {
         email: string;
         pwd: string;

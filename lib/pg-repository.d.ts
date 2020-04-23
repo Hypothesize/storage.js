@@ -1,4 +1,4 @@
-export declare const Repository: new (config: string) => import("./repository").RepositoryGroup<{
+export declare const Repository: new (config: string) => RepositoryGroup<{
     authenticateAsync: (credentials: {
         email: string;
         pwd: string;
