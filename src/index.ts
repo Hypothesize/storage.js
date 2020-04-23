@@ -1,1 +1,1 @@
-module.exports = require('./repository')
+export default import('./repository')
