@@ -11,12 +11,12 @@ export interface RepositoryGroup<X = {}> {
 	extensions: X
 }
 
-export type DTOsMap = Hypothesize.Entities.Map
+type DTOsMap = Hypothesize.Entities.Map
 
-export type ToStore<E extends keyof DTOsMap> = DTOsMap[E]["toStorage"]
-export type FromStore<E extends keyof DTOsMap> = DTOsMap[E]["fromStorage"]
+type ToStore<E extends keyof DTOsMap> = DTOsMap[E]["toStorage"]
+type FromStore<E extends keyof DTOsMap> = DTOsMap[E]["fromStorage"]
 
-export interface RepositoryReadonly<E extends keyof DTOsMap> {
+interface RepositoryReadonly<E extends keyof DTOsMap> {
 	/** find one entity object with a specific id, throws exception if not found */
 	findAsync(id: string): Promise<FromStore<E>>
 
@@ -24,11 +24,11 @@ export interface RepositoryReadonly<E extends keyof DTOsMap> {
 	getAsync(args: { parentId: string, filters?: Hypothesize.Data.FilterGroup<FromStore<E>> }): Promise<FromStore<E>[]>
 }
 
-export interface RepositoryEditable<E extends keyof DTOsMap> extends RepositoryReadonly<E> {
+interface RepositoryEditable<E extends keyof DTOsMap> extends RepositoryReadonly<E> {
 	saveAsync: (obj: ToStore<E>) => Promise<FromStore<E>>
 }
 
-export interface IOProvider<X = {}> {
+interface IOProvider<X = {}> {
 	/** find one entity object, throws exception if not found */
 	findAsync: <E extends keyof DTOsMap>(args: { entity: E, id: string }) => Promise<FromStore<E>>
 
