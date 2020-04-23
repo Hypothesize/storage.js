@@ -1,1 +1,1 @@
-export default import('./repository')
+export * from './repository'
