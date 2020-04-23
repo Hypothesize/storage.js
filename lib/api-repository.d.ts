@@ -3,7 +3,7 @@ declare type Obj<TValue = any, TKey extends string = string> = {
 };
 declare const Repository_base: new (config: {
     baseUrl: string;
-}) => RepositoryGroup<{
+}) => import("./repository").RepositoryGroup<{
     /** Store raw data in S3 and returns a promise of the URL of the stored object
     * @param data Data to be stored
     * @param key Key used to identify the stored data

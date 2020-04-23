@@ -1,2 +1,1 @@
-import * as Repository from "./repository"
-export default Repository
+module.exports = require('./repository')
