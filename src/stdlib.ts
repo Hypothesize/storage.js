@@ -1,4 +1,5 @@
 import { cloneDeep, mergeWith } from "lodash"
+import { Hypothesize } from "./repository"
 
 // import * as shortid from "shortid"
 type Obj<TValue = any, TKey extends string = string> = { [key in TKey]: TValue }

@@ -1,7 +1,7 @@
 import { getAsync, postAsync, putAsync, deleteAsync, checkStatusCode, GetRequest } from "./web"
 import { String__ } from "./stdlib"
 import * as shortid from "shortid"
-import { generate as generateRepoGroup } from "./repository"
+import { generate as generateRepoGroup, Hypothesize } from "./repository"
 import { EntityParents } from "./constants"
 
 type DTOsMap = Hypothesize.Entities.Map

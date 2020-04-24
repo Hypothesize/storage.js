@@ -1,3 +1,4 @@
+import { Hypothesize } from "./repository";
 declare type Obj<TValue = any, TKey extends string = string> = {
     [key in TKey]: TValue;
 };

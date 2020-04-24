@@ -1,3 +1,4 @@
+import { Hypothesize } from "./repository";
 export declare const Repository: new (config: string) => import("./repository").RepositoryGroup<{
     authenticateAsync: (credentials: {
         email: string;

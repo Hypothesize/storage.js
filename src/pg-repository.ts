@@ -2,7 +2,7 @@ import * as pgPromise from "pg-promise"
 import * as bcrypt from "bcryptjs"
 import * as assert from 'assert'
 
-import { generate as generateRepository } from "./repository"
+import { generate as generateRepository, Hypothesize } from "./repository"
 import { String__ } from "./stdlib"
 
 type DTOsMap = Hypothesize.Entities.Map
