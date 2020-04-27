@@ -2,10 +2,9 @@ import * as pgPromise from "pg-promise"
 import * as bcrypt from "bcryptjs"
 import * as assert from 'assert'
 
-import { generate as generateRepository, Hypothesize } from "./repository"
+import { generate as generateRepository, FilterGroup, DTOsMap } from "./repository"
 import { String__ } from "./stdlib"
 
-type DTOsMap = Hypothesize.Entities.Map
 type Obj<TValue = any, TKey extends string = string> = { [key in TKey]: TValue }
 
 export const Repository = generateRepository(class {
@@ -27,7 +26,7 @@ export const Repository = generateRepository(class {
 	 * @param parentId Basic parent id filter
 	 * @param filter Additional custom filter(s)
 	 */
-	async getAsync<E extends keyof DTOsMap>(args: { entity: E, parentId?: string, filters?: Hypothesize.Data.FilterGroup<DTOsMap[E]["fromStorage"]> }): Promise<DTOsMap[E]["fromStorage"][]> {
+	async getAsync<E extends keyof DTOsMap>(args: { entity: E, parentId?: string, filters?: FilterGroup<DTOsMap[E]["fromStorage"]> }): Promise<DTOsMap[E]["fromStorage"][]> {
 		const pgFnName = `get_${getTableName(args.entity)}`
 		const whereClause = args.filters ? getWhereClause(args.filters) : `1=1`
 		console.log(`where clause for ${JSON.stringify(args.filters)} = ${whereClause}`)
