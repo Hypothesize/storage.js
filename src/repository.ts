@@ -51,6 +51,7 @@ export interface RepositoryEditable<E extends keyof DTOsMap> extends RepositoryR
 export interface Repository<E extends keyof DTOsMap> extends RepositoryEditable<E> {
 	deleteAsync: (id: string) => Promise<void>
 }
+export type RepositoryGroup<X extends DTOsMap> = { [key in keyof X]: Repository<string> }
 
 export type PassedObjects<X extends DTOsMap, I = {}> = {
 	[key in keyof X]: DTO
@@ -59,31 +60,35 @@ export type PassedObjects<X extends DTOsMap, I = {}> = {
 interface Ctor<TArgs = {}, TObj = {}> { new(args: TArgs): TObj }
 
 export type DTO = {
-	toStorage: Object
+	toStorage: Object & { id?: string }
 	fromStorage: Object
 }
 export type DTOsMap = { [key: string]: DTO }
 
-export type RepositoryGroup<X extends DTOsMap> = { [key in keyof X]: Repository<string> }
 
 export type ToStore<E extends keyof DTOsMap> = DTOsMap[E]["toStorage"]
 export type FromStore<E extends keyof DTOsMap> = DTOsMap[E]["fromStorage"]
 
 export interface IOProvider<X = {}> {
 	/** find one entity object, throws exception if not found */
-	findAsync: <E extends keyof DTOsMap>(args: { entity: E, id: string }) => Promise<FromStore<E>>
+	findAsync: <E extends Extract<keyof DTOsMap, string>>(args: { entity: E, id: string }) => Promise<FromStore<E>>
 
 	/** get a set of entity objects */
-	getAsync: <E extends keyof DTOsMap>(args: { entity: E, parentId?: string, filters?: FilterGroup<FromStore<E>> }) => Promise<FromStore<E>[]>
+	getAsync: <E extends Extract<keyof DTOsMap, string>>(args: { entity: E, parentId?: string, filters?: FilterGroup<FromStore<E>> }) => Promise<FromStore<E>[]>
 
-	saveAsync: <E extends keyof DTOsMap>(args: { entity: E, obj: ToStore<E>, mode: "insert" | "update" }) => Promise<FromStore<E>>
-	deleteAsync: <E extends keyof DTOsMap>(args: { entity: E, id: string }) => Promise<void>
+	saveAsync: <E extends Extract<keyof DTOsMap, string>>(args: { entity: E, obj: ToStore<E>, mode: "insert" | "update" }) => Promise<FromStore<E>>
+	deleteAsync: <E extends Extract<keyof DTOsMap, string>>(args: { entity: E, id: string }) => Promise<void>
 
 	extensions: X
 }
 
-export function generate<C, X>(ioProviderClass: Ctor<C, IOProvider<X>>): new (config: C) => RepositoryGroup<X> {
-	return class {
+/**
+ * 
+ * @param ioProviderClass 
+ * @param repos The individual repositories: tables, users...
+ */
+export function generate<C, X, O extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X>>, repos: O): new (config: C) => RepositoryGroup<O> {
+	class test {
 		readonly io: Readonly<IOProvider<X>>
 
 		constructor(config: C) {
@@ -94,12 +99,14 @@ export function generate<C, X>(ioProviderClass: Ctor<C, IOProvider<X>>): new (co
 				throw new Error(`Repository group constructor : ${err} `)
 			}
 			console.assert(this.io !== undefined, `Repository group this.io after construction is still undefined`)
+			Object.keys(repos).forEach(prop => {
+				this[prop] = this.createRepository(prop)
+			})
 		}
-
-		protected createRepository<E extends keyof DTOsMap>(e: E, methods?: (keyof Repository<E>)[]) {
+		protected createRepository<E extends Extract<keyof DTOsMap, string>>(e: E, methods?: (keyof Repository<E>)[]) {
 			return {
 				findAsync: async (id: string) => this.io.findAsync({ entity: e, id: id }),
-				getAsync: async (selector?: { parentId?: string, filters?: Hypothesize.Data.FilterGroup<FromStore<E>> }) => {
+				getAsync: async (selector?: { parentId?: string, filters?: FilterGroup<FromStore<E>> }) => {
 					return this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
 				},
 				saveAsync: async (obj: ToStore<E>) => {
@@ -112,22 +119,7 @@ export function generate<C, X>(ioProviderClass: Ctor<C, IOProvider<X>>): new (co
 			}
 		}
 
-		projects = this.createRepository("projects")
-
-		tables = this.createRepository("tables")
-
-		analyses = this.createRepository("analyses")
-
-		columns = {
-			...this.createRepository("columns"),
-			deleteAsync: undefined
-		}
-		results = {
-			...this.createRepository("results"),
-			saveAsync: undefined,
-			deleteAsync: undefined
-		}
-
 		get extensions() { return this.io.extensions }
 	}
+	return test as any
 }

@@ -1,8 +1,7 @@
-import { Hypothesize } from "./repository";
+import { Primitive } from "./repository";
 declare type Obj<TValue = any, TKey extends string = string> = {
     [key in TKey]: TValue;
 };
-declare type Primitive = number | string | Date;
 declare type Omit<T, K extends keyof T> = {
     [P in Exclude<keyof T, K>]: T[P];
 };
@@ -42,7 +41,7 @@ export declare class String__ extends String {
     constructor(str: string);
     isWhiteSpace(): boolean;
     getCharacters(): Array__<String__>;
-    getArrayFromCsv<T extends Hypothesize.Primitive2>(): Array__<T>;
+    getArrayFromCsv<T extends Primitive>(): Array__<T>;
     trimLeft(...strings: string[]): string;
     trimRight(...strings: string[]): string;
     tokenizeWords(separateCaseBoundary?: "upper" | "lower" | "all" | "none", seperatorChars?: string[]): Array__<String__>;
@@ -357,12 +356,5 @@ export declare class Set__<T = any> extends global.Set<T> {
     filter(predicate: Predicate<T>): Set__<T>;
     every(predicate: Predicate<T>): boolean;
     some(predicate: Predicate<T>): boolean;
-}
-export declare class Stack<T> {
-    _size: number;
-    _storage: Obj<T>;
-    constructor(...initial: T[]);
-    push(data: T): void;
-    pop(): T | void;
 }
 export {};

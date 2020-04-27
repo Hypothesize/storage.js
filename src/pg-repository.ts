@@ -1,11 +1,8 @@
 import * as pgPromise from "pg-promise"
-import * as bcrypt from "bcryptjs"
+import { String__ } from "./light_stdlib"
 import * as assert from 'assert'
 
-import { generate as generateRepository, FilterGroup, DTOsMap } from "./repository"
-import { String__ } from "./stdlib"
-
-type Obj<TValue = any, TKey extends string = string> = { [key in TKey]: TValue }
+import { generate as generateRepository, FilterGroup, Filter, Filters, DTOsMap, Primitive, Obj } from "./repository"
 
 export const Repository = generateRepository(class {
 	readonly db: pgPromise.IDatabase<any>
@@ -15,7 +12,7 @@ export const Repository = generateRepository(class {
 		//this.db.connect().then(x => x.client.addListener("", (x) => { }))
 	}
 
-	async findAsync<E extends keyof DTOsMap>(args: { entity: E, id: string }): Promise<DTOsMap[E]["fromStorage"]> {
+	async findAsync<E extends Extract<keyof DTOsMap, string>>(args: { entity: E, id: string }): Promise<DTOsMap[E]["fromStorage"]> {
 		const obj = await this.db.oneOrNone(`SELECT * FROM ${getTableName(args.entity)} WHERE id = '${args.id}'`)
 		return dbToApp<E>(args.entity, obj)
 	}
@@ -26,7 +23,7 @@ export const Repository = generateRepository(class {
 	 * @param parentId Basic parent id filter
 	 * @param filter Additional custom filter(s)
 	 */
-	async getAsync<E extends keyof DTOsMap>(args: { entity: E, parentId?: string, filters?: FilterGroup<DTOsMap[E]["fromStorage"]> }): Promise<DTOsMap[E]["fromStorage"][]> {
+	async getAsync<E extends Extract<keyof DTOsMap, string>>(args: { entity: E, parentId?: string, filters?: FilterGroup<DTOsMap[E]["fromStorage"]> }): Promise<DTOsMap[E]["fromStorage"][]> {
 		const pgFnName = `get_${getTableName(args.entity)}`
 		const whereClause = args.filters ? getWhereClause(args.filters) : `1=1`
 		console.log(`where clause for ${JSON.stringify(args.filters)} = ${whereClause}`)
@@ -35,12 +32,12 @@ export const Repository = generateRepository(class {
 		return dbObjects.map(obj => ({ ...dbToApp<E>(args.entity, obj) }))
 	}
 
-	async saveAsync<E extends keyof DTOsMap>(args: { entity: E, obj: DTOsMap[E]["toStorage"], mode: "insert" | "update" }): Promise<DTOsMap[E]["fromStorage"]> {
+	async saveAsync<E extends Extract<keyof DTOsMap, string>>(args: { entity: E, obj: DTOsMap[E]["toStorage"], mode: "insert" | "update" }): Promise<DTOsMap[E]["fromStorage"]> {
 		if (!args.obj)
 			throw new Error(`PGRepository updateAsync(): Object to update is missing`)
 
 		if (args.mode === "insert") {
-			const keys = Object.keys(args.obj) as (keyof Hypothesize.Entities.Map[E]["toStorage"])[]
+			const keys = Object.keys(args.obj)
 			const values = keys.map(key => args.obj[key]).join(",")
 			const columns = keys.map(k => new String__(k.toString()).toSnakeCase()).join(",")
 			const query = `insert into ${args.entity} (${columns}) values (${values}) returning *`
@@ -51,7 +48,7 @@ export const Repository = generateRepository(class {
 			if (!args.obj.id)
 				throw new Error(`PGRepository updateAsync(): Object Id property missing`)
 
-			let keys = Object.keys(args.obj) as (keyof Hypothesize.Entities.Map[E]["toStorage"])[]
+			let keys = Object.keys(args.obj)
 			let assignmentsClause = keys
 				.filter(key => key.toString() !== "id")
 				.map((key, index) => `${new String__(key.toString()).toSnakeCase()} = $${index + 1}`).join(', ')
@@ -65,50 +62,17 @@ export const Repository = generateRepository(class {
 		}
 	}
 
-	async deleteAsync<E extends keyof DTOsMap>(args: { entity: E, id: string }): Promise<void> {
+	async deleteAsync<E extends Extract<keyof DTOsMap, string>>(args: { entity: E, id: string }): Promise<void> {
 		const stmt = `delete from ${getTableName(args.entity)} where id=$1`
 		console.log(`pg repository: delete sql to be executed: "${stmt}"`)
 		await this.db.any(stmt, [args.id])
 	}
 
 	extensions = {
-		authenticateAsync: async (credentials: { email: string, pwd: string }): Promise<Hypothesize.Entities.User.FromStorage | undefined> => {
-			const dbUsers = await this.getAsync({
-				entity: "users",
-				parentId: "",
-				filters: { filters: [{ fieldName: "emailAddress", operator: "equal", value: credentials.email }] }
-			})
-			const dbUser = dbUsers[0]
-			if (!dbUser) return undefined
-			return new Promise(resolve => {
-				bcrypt.compare(credentials.pwd, dbUser.pwdHash, (error: Error, result: boolean) => {
-					if (result === true) {
-						resolve(dbUser)
-					}
-					else {
-						console.log(error)
-						resolve(undefined)
-					}
-				})
-			})
-		},
-		registerAsync: async (args: Hypothesize.Entities.User.ForStorage & { password: string }): Promise<Hypothesize.Entities.User.FromStorage> => {
-			const { password, ...user } = args
-			const salt = bcrypt.genSaltSync()
-			const pwdHash = bcrypt.hashSync(password, salt)
-			const userToBeRegistered: Hypothesize.Entities.User.ForStorage = {
-				...user,
-				pwdHash: pwdHash,
-				pwdSalt: salt
-			}
-			return await this.saveAsync({ entity: "users", obj: userToBeRegistered, mode: "insert" })
-		},
 
 		unregisterAsync: async (id: string) => this.deleteAsync({ entity: "users", id }),
 
 		findUserAsync: async (userid: string) => this.findAsync({ entity: "users", id: userid }),
-		//getUsersAsync: async (role: User["role"]) => this.getAsync("user", { role }),
-		updateUserAsync: async (obj: Hypothesize.Entities.User.ForStorage) => this.saveAsync({ entity: "users", obj, mode: "update" }),
 
 		insertResultsAsync: async (results: DTOsMap["results"]["toStorage"][]) => { throw new Error(`insertResultsAsync not implemented`) },
 		deleteResultsAsync: async (analysisId: string) => {
@@ -138,10 +102,13 @@ export const Repository = generateRepository(class {
     }
     */
 
+}, {
+	tables: { toStorage: {}, fromStorage: {} },
+	users: { toStorage: {}, fromStorage: {} },
 })
 
 
-function getTableName(entityName: keyof DTOsMap): string {
+function getTableName(entityName: Extract<keyof DTOsMap, string>): string {
 	const plural = new String__(entityName).plural() as String
 	return plural.toLocaleLowerCase()
 }
@@ -149,12 +116,12 @@ function getColumnName(propertyName: string): string {
 	return new String__(propertyName).toSnakeCase().toLocaleLowerCase()
 }
 
-function getWhereClause(filter: Hypothesize.Data.FilterGroup<any>): string {
-	const quoteValue = (x: Hypothesize.Primitive | null) => typeof x === "number" ? `${x}` : `'${x}'`
+function getWhereClause(filter: FilterGroup<any>): string {
+	const quoteValue = (x: Primitive | null) => typeof x === "number" ? `${x}` : `'${x}'`
 	//console.log(`quoteValue: ${quoteValue}`)
 
 
-	const expressionTemplates: Obj<undefined | ((x: Hypothesize.Primitive | null) => string), Required<Hypothesize.Data.Filter>["operator"]> = {
+	const expressionTemplates: Obj<undefined | ((x: Primitive | null) => string), Required<Filter>["operator"]> = {
 		equal: x => `= ${quoteValue(x)}`,
 		not_equal: x => `<> ${quoteValue(x)}`,
 		greater: x => `> ${quoteValue(x)}`,
@@ -208,7 +175,7 @@ function dbToApp<T extends keyof DTOsMap>(entity: T, serverObj: any) {
 export const testSuite = () => {
 	describe("getWhereClause", () => {
 		it("should return a two single conditions when passing an array of two filters", () => {
-			const filter: Hypothesize.Data.FilterGroup = {
+			const filter: FilterGroup = {
 				combinator: "and",
 				filters: [
 					{
@@ -230,7 +197,7 @@ export const testSuite = () => {
 			assert.equal(actualWhereClause, expectedWhereClause)
 		})
 		it("should return a single condition and another with two conditions nested when passing an array of a filter and a filterGroup", () => {
-			const filter: Hypothesize.Data.FilterGroup = {
+			const filter: FilterGroup = {
 				combinator: "and",
 				filters: [
 					{
@@ -263,7 +230,7 @@ export const testSuite = () => {
 			assert.equal(actualWhereClause, expectedWhereClause)
 		})
 		it("should return a condition with a sql string matching when passing a filter with 'contains' or related operators", () => {
-			const filter: Hypothesize.Data.FilterGroup = {
+			const filter: FilterGroup = {
 				combinator: "and",
 				filters: [
 					{
@@ -285,14 +252,14 @@ export const testSuite = () => {
 			assert.equal(actualWhereClause, expectedWhereClause)
 		})
 		it("should return a sql condition that checks if is NULL when passing a filter with 'blank' operator", () => {
-			const filter: Hypothesize.Data.FilterGroup = {
+			const filter: FilterGroup = {
 				combinator: "and",
 				filters: [
 					{
 						fieldName: "description",
 						operator: "equals" as any,
 						negated: false
-					} as Hypothesize.Data.Filters.Categorical<any>
+					} as Filters.Categorical<any>
 				]
 			}
 			const actualWhereClause = getWhereClause(filter)

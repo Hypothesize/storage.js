@@ -1,19 +1,17 @@
 import { getAsync, postAsync, putAsync, deleteAsync, checkStatusCode, GetRequest } from "./web"
-import { String__ } from "./stdlib"
+import { String__ } from "./light_stdlib"
 import * as shortid from "shortid"
-import { generate as generateRepoGroup, Hypothesize } from "./repository"
+import { generate as generateRepositories, FilterGroup, Filter, Filters, DTOsMap, Primitive, Obj } from "./repository"
+
 import { EntityParents } from "./constants"
 
-type DTOsMap = Hypothesize.Entities.Map
-type Obj<TValue = any, TKey extends string = string> = { [key in TKey]: TValue }
-
-export class Repository extends generateRepoGroup(class {
+export class Repository extends generateRepositories(class {
 	readonly _baseUrl: string
 	constructor(args: { baseUrl: string }) {
 		this._baseUrl = args.baseUrl
 		console.log(`API repository base url: ${this._baseUrl}`)
 	}
-	async findAsync<E extends keyof DTOsMap>(args: { entity: E, id: string }): Promise<DTOsMap[E]["fromStorage"]> {
+	async findAsync<E extends Extract<keyof DTOsMap, string>>(args: { entity: E, id: string }): Promise<DTOsMap[E]["fromStorage"]> {
 		const entityPluralName = new String__(args.entity).plural()
 		return getAsync({ uri: `${this._baseUrl}/${entityPluralName}/${args.id}/` })
 			.then(res => {
@@ -21,7 +19,7 @@ export class Repository extends generateRepoGroup(class {
 				return JSON.parse(res.body) as DTOsMap[E]["fromStorage"]
 			})
 	}
-	async getAsync<E extends keyof DTOsMap>(args: { entity: E, parentId?: string, filters?: Hypothesize.Data.FilterGroup<DTOsMap[E]["fromStorage"]> }): Promise<DTOsMap[E]["fromStorage"][]> {
+	async getAsync<E extends Extract<keyof DTOsMap, string>>(args: { entity: E, parentId?: string, filters?: FilterGroup<DTOsMap[E]["fromStorage"]> }): Promise<DTOsMap[E]["fromStorage"][]> {
 		console.log(`API repository getAsync(entity=${args.entity}, parent id=${JSON.stringify(args.parentId)}, filters=${JSON.stringify(args.filters)})`)
 
 		const parentEntity = EntityParents["user"]
@@ -40,7 +38,7 @@ export class Repository extends generateRepoGroup(class {
 			return JSON.parse(res.body) as DTOsMap[E]["fromStorage"][]
 		})
 	}
-	async saveAsync<E extends keyof DTOsMap>(args: { entity: E, obj: DTOsMap[E]["toStorage"], mode: "insert" | "update" }): Promise<DTOsMap[E]["fromStorage"]> {
+	async saveAsync<E extends Extract<keyof DTOsMap, string>>(args: { entity: E, obj: DTOsMap[E]["toStorage"], mode: "insert" | "update" }): Promise<DTOsMap[E]["fromStorage"]> {
 		const entityPluralName = new String__(args.entity).plural()
 
 		if (args.mode === "insert") {
@@ -62,7 +60,7 @@ export class Repository extends generateRepoGroup(class {
 			})
 		}
 	}
-	async deleteAsync<E extends keyof DTOsMap>(args: { entity: E, id: any }): Promise<void> {
+	async deleteAsync<E extends Extract<keyof DTOsMap, string>>(args: { entity: E, id: any }): Promise<void> {
 		const entityPluralName = new String__(args.entity).plural()
 		const res = await deleteAsync({ uri: `${this._baseUrl}/${entityPluralName}/${args.id}` })
 		checkStatusCode(res, `Error deleting ${entityPluralName} data`)
@@ -114,6 +112,8 @@ export class Repository extends generateRepoGroup(class {
 			}
 		}
 	}
+}, {
+
 }) {
 
 }
