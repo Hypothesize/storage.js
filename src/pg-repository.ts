@@ -103,6 +103,29 @@ export const Repository = <D extends DTOsMap>() => generate<string, {}, D>(class
 
 })
 
+const test = Repository<TestMap>()
+const blah = new test("", ["columns", "users", "projects"])
+blah.columns.saveAsync({
+	id: "dfsdfsdf",
+	plop: ""
+})
+type TestMap = {
+	users: {
+		parent: undefined,
+		toStorage: { id: string, plop: string }
+		fromStorage: { id: string, plop: string }
+	}
+	projects: {
+		parent: { id: string, plop: string },
+		toStorage: { id: string, plop: string }
+		fromStorage: { id: string, plop: string }
+	}
+	columns: {
+		parent: { id: string, plop: string },
+		toStorage: { id: string, plop: string }
+		fromStorage: { id: string, plop: string }
+	}
+}
 
 function getTableName(entityName: Extract<keyof DTOsMap, string>): string {
 	const plural = new String__(entityName).plural() as String

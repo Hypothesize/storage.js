@@ -38,24 +38,20 @@ export interface FilterGroup<T extends Obj = Obj> {
 	filters: (Filter<T> | FilterGroup<T>)[]
 }
 
-export interface RepositoryReadonly<E extends keyof DTOsMap> {
+export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 	/** find one entity object with a specific id, throws exception if not found */
-	findAsync(id: string): Promise<DTOsMap[E]["fromStorage"]>
+	findAsync(id: string): Promise<D[E]["fromStorage"]>
 
 	/** get entity objects with optional parent and additional filters ... */
-	getAsync(args: { parentId: string, filters?: FilterGroup<DTOsMap[E]["fromStorage"]> }): Promise<DTOsMap[E]["fromStorage"][]>
+	getAsync(args: { parentId: string, filters?: FilterGroup<D[E]["fromStorage"]> }): Promise<D[E]["fromStorage"][]>
 }
-export interface RepositoryEditable<E extends keyof DTOsMap> extends RepositoryReadonly<E> {
-	saveAsync: (obj: DTOsMap[E]["toStorage"]) => Promise<DTOsMap[E]["fromStorage"]>
+export interface RepositoryEditable<D extends DTOsMap, E extends keyof D> extends RepositoryReadonly<D, E> {
+	saveAsync: (obj: D[E]["toStorage"]) => Promise<D[E]["fromStorage"]>
 }
-export interface Repository<E extends keyof DTOsMap> extends RepositoryEditable<E> {
+export interface Repository<D extends DTOsMap, E extends keyof DTOsMap> extends RepositoryEditable<D, E> {
 	deleteAsync: (id: string) => Promise<void>
 }
-export type RepositoryGroup<X extends DTOsMap> = { [key in keyof X]: Repository<Extract<keyof X, string>> }
-
-export type PassedObjects<X extends DTOsMap, I = {}> = {
-	[key in keyof X]: DTO
-}
+export type RepositoryGroup<X extends DTOsMap> = { [key in keyof X]: Repository<X, Extract<keyof X, string>> }
 
 interface Ctor<TArgs = {}, TObj = {}, TEnt extends DTOsMap = DTOsMap> { new <TEnt>(args: TArgs): TObj }
 
@@ -64,7 +60,6 @@ export type DTO = {
 	fromStorage: Object
 }
 export type DTOsMap = { [key: string]: DTO }
-
 
 export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 	/** find one entity object, throws exception if not found */
