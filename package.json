@@ -3,6 +3,7 @@
 	"version": "0.0.5",
 	"description": "Database access through the repository pattern in Javascript/TypeScript",
 	"main": "./lib/index.js",
+	"browser": "./lib/index-browser.js",
 	"types": "./lib/index.d.ts",
 	"scripts": {
 		"test": "mocha test\\",
