@@ -57,7 +57,7 @@ export type PassedObjects<X extends DTOsMap, I = {}> = {
 	[key in keyof X]: DTO
 }
 
-interface Ctor<TArgs = {}, TObj = {}> { new(args: TArgs): TObj }
+interface Ctor<TArgs = {}, TObj = {}, TEnt extends DTOsMap = DTOsMap> { new<TEnt>(args: TArgs): TObj }
 
 export type DTO = {
 	toStorage: Object & { id?: string }
@@ -86,11 +86,11 @@ export interface IOProvider<X = {}> {
  * @param ioProviderClass 
  * @param repos The individual repositories: tables, users...
  */
-export function generate<C, X, O>(ioProviderClass: Ctor<C, IOProvider<X>>): new <O extends DTOsMap>(config: C, dtoNames: Extract<keyof O, string>[]) => RepositoryGroup<O> {
+export function generate<C, X extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X>>): new <X extends DTOsMap>(config: C, dtoNames: Extract<keyof X, string>[]) => RepositoryGroup<X> {
 	return class {
 		readonly io: Readonly<IOProvider<X>>
 
-		constructor(config: C, dtoNames: Extract<keyof O, string>[]) {
+		constructor(config: C, dtoNames: Extract<keyof X, string>[]) {
 			try {
 				this.io = new ioProviderClass(config)
 			}
@@ -102,13 +102,13 @@ export function generate<C, X, O>(ioProviderClass: Ctor<C, IOProvider<X>>): new 
 				this[prop as string] = this.createRepository(prop)
 			})
 		}
-		protected createRepository<E extends Extract<keyof O, string>>(e: E) {
+		protected createRepository<E extends Extract<keyof X, string>>(e: E) {
 			return {
 				findAsync: async (id: string) => this.io.findAsync({ entity: e, id: id }),
 				getAsync: async (selector?: { parentId?: string, filters?: FilterGroup<FromStore<E>> }) => {
 					return this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
 				},
-				saveAsync: async (obj: ToStore<E>) => {
+				saveAsync: async (obj: X[E]["toStorage"]) => {
 					return obj.id
 						? this.io.saveAsync({ entity: e, obj, mode: "update" })
 						: this.io.saveAsync({ entity: e, obj, mode: "insert" })

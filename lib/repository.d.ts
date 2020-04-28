@@ -52,8 +52,8 @@ export declare type RepositoryGroup<X extends DTOsMap> = {
 export declare type PassedObjects<X extends DTOsMap, I = {}> = {
     [key in keyof X]: DTO;
 };
-interface Ctor<TArgs = {}, TObj = {}> {
-    new (args: TArgs): TObj;
+interface Ctor<TArgs = {}, TObj = {}, TEnt extends DTOsMap = DTOsMap> {
+    new <TEnt>(args: TArgs): TObj;
 }
 export declare type DTO = {
     toStorage: Object & {
@@ -94,5 +94,5 @@ export interface IOProvider<X = {}> {
  * @param ioProviderClass
  * @param repos The individual repositories: tables, users...
  */
-export declare function generate<C, X, O>(ioProviderClass: Ctor<C, IOProvider<X>>): new <O extends DTOsMap>(config: C, dtoNames: Extract<keyof O, string>[]) => RepositoryGroup<O>;
+export declare function generate<C, X extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X>>): new <X extends DTOsMap>(config: C, dtoNames: Extract<keyof X, string>[]) => RepositoryGroup<X>;
 export {};
