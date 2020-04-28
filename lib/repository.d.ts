@@ -92,5 +92,5 @@ export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
  * @param ioProviderClass
  * @param repos The individual repositories: tables, users...
  */
-export declare function generate<C, X, D extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X, D>>): new (config: C, dtoNames: Extract<keyof X, string>[]) => RepositoryGroup<D>;
+export declare function generate<C, X, D extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X, D>>): new (config: C, dtoNames: Extract<keyof D, string>[]) => RepositoryGroup<D>;
 export {};
