@@ -1,6 +1,4 @@
-declare const Repository_base: new (config: {
+import { DTOsMap } from "./repository";
+export declare const Repository: (dtosMap: DTOsMap) => new (config: {
     baseUrl: string;
-}) => import("./repository").RepositoryGroup<{}>;
-export declare class Repository extends Repository_base {
-}
-export {};
+}) => import("./repository").RepositoryGroup<DTOsMap>;

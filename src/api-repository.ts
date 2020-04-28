@@ -5,7 +5,7 @@ import { generate as generateRepositories, FilterGroup, Filter, Filters, DTOsMap
 
 import { EntityParents } from "./constants"
 
-export class Repository extends generateRepositories(class {
+export const Repository = (dtosMap: DTOsMap) => generateRepositories(dtosMap, class {
 	readonly _baseUrl: string
 	constructor(args: { baseUrl: string }) {
 		this._baseUrl = args.baseUrl
@@ -112,11 +112,7 @@ export class Repository extends generateRepositories(class {
 			}
 		}
 	}
-}, {
-
-}) {
-
-}
+})
 
 function arrayBufferToBase64(buffer: ArrayBuffer) {
 	var binary = '';

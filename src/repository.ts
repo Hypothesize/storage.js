@@ -87,7 +87,7 @@ export interface IOProvider<X = {}> {
  * @param ioProviderClass 
  * @param repos The individual repositories: tables, users...
  */
-export function generate<C, X, O extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X>>, repos: O): new (config: C) => RepositoryGroup<O> {
+export function generate<C, X, O extends DTOsMap>(repos: O, ioProviderClass: Ctor<C, IOProvider<X>>): new (config: C) => RepositoryGroup<O> {
 	class test {
 		readonly io: Readonly<IOProvider<X>>
 
