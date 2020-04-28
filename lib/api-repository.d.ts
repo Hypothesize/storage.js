@@ -1,4 +1,4 @@
 import { DTOsMap } from "./repository";
-export declare const Repository: (dtosMap: DTOsMap) => new (config: {
+export declare const Repository: new (config: {
     baseUrl: string;
-}) => import("./repository").RepositoryGroup<DTOsMap>;
+}, dtosMap: DTOsMap) => import("./repository").RepositoryGroup<DTOsMap>;

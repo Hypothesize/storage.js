@@ -5,7 +5,7 @@ import { generate as generateRepositories, FilterGroup, Filter, Filters, DTOsMap
 
 import { EntityParents } from "./constants"
 
-export const Repository = (dtosMap: DTOsMap) => generateRepositories(dtosMap, class {
+export const Repository = generateRepositories(class {
 	readonly _baseUrl: string
 	constructor(args: { baseUrl: string }) {
 		this._baseUrl = args.baseUrl

@@ -4,7 +4,7 @@ import * as assert from 'assert'
 
 import { generate as generateRepository, FilterGroup, Filter, Filters, DTOsMap, Primitive, Obj } from "./repository"
 
-export const Repository = (dtosMap: DTOsMap) => generateRepository(dtosMap, class {
+export const Repository = generateRepository(class {
 	readonly db: pgPromise.IDatabase<any>
 
 	constructor(dbUrl: string) {

@@ -87,11 +87,11 @@ export interface IOProvider<X = {}> {
  * @param ioProviderClass 
  * @param repos The individual repositories: tables, users...
  */
-export function generate<C, X, O extends DTOsMap>(repos: O, ioProviderClass: Ctor<C, IOProvider<X>>): new (config: C) => RepositoryGroup<O> {
-	class test {
+export function generate<C, X, O extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X>>): new (config: C, dtosMap: O) => RepositoryGroup<O> {
+	return class {
 		readonly io: Readonly<IOProvider<X>>
 
-		constructor(config: C) {
+		constructor(config: C, dtosMap: O) {
 			try {
 				this.io = new ioProviderClass(config)
 			}
@@ -99,7 +99,7 @@ export function generate<C, X, O extends DTOsMap>(repos: O, ioProviderClass: Cto
 				throw new Error(`Repository group constructor : ${err} `)
 			}
 			console.assert(this.io !== undefined, `Repository group this.io after construction is still undefined`)
-			Object.keys(repos).forEach(prop => {
+			Object.keys(dtosMap).forEach(prop => {
 				this[prop] = this.createRepository(prop)
 			})
 		}
@@ -120,6 +120,5 @@ export function generate<C, X, O extends DTOsMap>(repos: O, ioProviderClass: Cto
 		}
 
 		get extensions() { return this.io.extensions }
-	}
-	return test as any
+	} as any
 }
