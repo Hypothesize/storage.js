@@ -33,15 +33,15 @@ export interface FilterGroup<T extends Obj = Obj> {
 }
 export interface RepositoryReadonly<E extends keyof DTOsMap> {
     /** find one entity object with a specific id, throws exception if not found */
-    findAsync(id: string): Promise<FromStore<E>>;
+    findAsync(id: string): Promise<DTOsMap[E]["fromStorage"]>;
     /** get entity objects with optional parent and additional filters ... */
     getAsync(args: {
         parentId: string;
-        filters?: FilterGroup<FromStore<E>>;
-    }): Promise<FromStore<E>[]>;
+        filters?: FilterGroup<DTOsMap[E]["fromStorage"]>;
+    }): Promise<DTOsMap[E]["fromStorage"][]>;
 }
 export interface RepositoryEditable<E extends keyof DTOsMap> extends RepositoryReadonly<E> {
-    saveAsync: (obj: ToStore<E>) => Promise<FromStore<E>>;
+    saveAsync: (obj: DTOsMap[E]["toStorage"]) => Promise<DTOsMap[E]["fromStorage"]>;
 }
 export interface Repository<E extends keyof DTOsMap> extends RepositoryEditable<E> {
     deleteAsync: (id: string) => Promise<void>;
@@ -64,26 +64,24 @@ export declare type DTO = {
 export declare type DTOsMap = {
     [key: string]: DTO;
 };
-export declare type ToStore<E extends keyof DTOsMap> = DTOsMap[E]["toStorage"];
-export declare type FromStore<E extends keyof DTOsMap> = DTOsMap[E]["fromStorage"];
-export interface IOProvider<X = {}> {
+export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
     /** find one entity object, throws exception if not found */
-    findAsync: <E extends Extract<keyof DTOsMap, string>>(args: {
+    findAsync: <E extends Extract<keyof D, string>>(args: {
         entity: E;
         id: string;
-    }) => Promise<FromStore<E>>;
+    }) => Promise<D[E]["fromStorage"]>;
     /** get a set of entity objects */
-    getAsync: <E extends Extract<keyof DTOsMap, string>>(args: {
+    getAsync: <E extends Extract<keyof D, string>>(args: {
         entity: E;
         parentId?: string;
-        filters?: FilterGroup<FromStore<E>>;
-    }) => Promise<FromStore<E>[]>;
-    saveAsync: <E extends Extract<keyof DTOsMap, string>>(args: {
+        filters?: FilterGroup<D[E]["fromStorage"]>;
+    }) => Promise<D[E]["fromStorage"][]>;
+    saveAsync: <E extends Extract<keyof D, string>>(args: {
         entity: E;
-        obj: ToStore<E>;
+        obj: D[E]["toStorage"];
         mode: "insert" | "update";
-    }) => Promise<FromStore<E>>;
-    deleteAsync: <E extends Extract<keyof DTOsMap, string>>(args: {
+    }) => Promise<D[E]["fromStorage"]>;
+    deleteAsync: <E extends Extract<keyof D, string>>(args: {
         entity: E;
         id: string;
     }) => Promise<void>;
@@ -94,5 +92,5 @@ export interface IOProvider<X = {}> {
  * @param ioProviderClass
  * @param repos The individual repositories: tables, users...
  */
-export declare function generate<C, X extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X>>): new <X extends DTOsMap>(config: C, dtoNames: Extract<keyof X, string>[]) => RepositoryGroup<X>;
+export declare function generate<C, X, D extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X, D>>): new (config: C, dtoNames: Extract<keyof X, string>[]) => RepositoryGroup<D>;
 export {};

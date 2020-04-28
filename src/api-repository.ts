@@ -1,11 +1,11 @@
 import { getAsync, postAsync, putAsync, deleteAsync, checkStatusCode, GetRequest } from "./web"
 import { String__ } from "./light_stdlib"
 import * as shortid from "shortid"
-import { generate as generateRepositories, FilterGroup, Filter, Filters, DTOsMap, Primitive, Obj } from "./repository"
+import { generate as generate, FilterGroup, Filter, Filters, DTOsMap, Primitive, Obj } from "./repository"
 
 import { EntityParents } from "./constants"
 
-export const Repository = generateRepositories(class {
+export const Repository = generate(class {
 	readonly _baseUrl: string
 	constructor(args: { baseUrl: string }) {
 		this._baseUrl = args.baseUrl

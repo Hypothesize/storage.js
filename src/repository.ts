@@ -40,13 +40,13 @@ export interface FilterGroup<T extends Obj = Obj> {
 
 export interface RepositoryReadonly<E extends keyof DTOsMap> {
 	/** find one entity object with a specific id, throws exception if not found */
-	findAsync(id: string): Promise<FromStore<E>>
+	findAsync(id: string): Promise<DTOsMap[E]["fromStorage"]>
 
 	/** get entity objects with optional parent and additional filters ... */
-	getAsync(args: { parentId: string, filters?: FilterGroup<FromStore<E>> }): Promise<FromStore<E>[]>
+	getAsync(args: { parentId: string, filters?: FilterGroup<DTOsMap[E]["fromStorage"]> }): Promise<DTOsMap[E]["fromStorage"][]>
 }
 export interface RepositoryEditable<E extends keyof DTOsMap> extends RepositoryReadonly<E> {
-	saveAsync: (obj: ToStore<E>) => Promise<FromStore<E>>
+	saveAsync: (obj: DTOsMap[E]["toStorage"]) => Promise<DTOsMap[E]["fromStorage"]>
 }
 export interface Repository<E extends keyof DTOsMap> extends RepositoryEditable<E> {
 	deleteAsync: (id: string) => Promise<void>
@@ -57,7 +57,7 @@ export type PassedObjects<X extends DTOsMap, I = {}> = {
 	[key in keyof X]: DTO
 }
 
-interface Ctor<TArgs = {}, TObj = {}, TEnt extends DTOsMap = DTOsMap> { new<TEnt>(args: TArgs): TObj }
+interface Ctor<TArgs = {}, TObj = {}, TEnt extends DTOsMap = DTOsMap> { new <TEnt>(args: TArgs): TObj }
 
 export type DTO = {
 	toStorage: Object & { id?: string }
@@ -65,18 +65,16 @@ export type DTO = {
 }
 export type DTOsMap = { [key: string]: DTO }
 
-export type ToStore<E extends keyof DTOsMap> = DTOsMap[E]["toStorage"]
-export type FromStore<E extends keyof DTOsMap> = DTOsMap[E]["fromStorage"]
 
-export interface IOProvider<X = {}> {
+export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 	/** find one entity object, throws exception if not found */
-	findAsync: <E extends Extract<keyof DTOsMap, string>>(args: { entity: E, id: string }) => Promise<FromStore<E>>
+	findAsync: <E extends Extract<keyof D, string>>(args: { entity: E, id: string }) => Promise<D[E]["fromStorage"]>
 
 	/** get a set of entity objects */
-	getAsync: <E extends Extract<keyof DTOsMap, string>>(args: { entity: E, parentId?: string, filters?: FilterGroup<FromStore<E>> }) => Promise<FromStore<E>[]>
+	getAsync: <E extends Extract<keyof D, string>>(args: { entity: E, parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => Promise<D[E]["fromStorage"][]>
 
-	saveAsync: <E extends Extract<keyof DTOsMap, string>>(args: { entity: E, obj: ToStore<E>, mode: "insert" | "update" }) => Promise<FromStore<E>>
-	deleteAsync: <E extends Extract<keyof DTOsMap, string>>(args: { entity: E, id: string }) => Promise<void>
+	saveAsync: <E extends Extract<keyof D, string>>(args: { entity: E, obj: D[E]["toStorage"], mode: "insert" | "update" }) => Promise<D[E]["fromStorage"]>
+	deleteAsync: <E extends Extract<keyof D, string>>(args: { entity: E, id: string }) => Promise<void>
 
 	extensions: X
 }
@@ -86,7 +84,7 @@ export interface IOProvider<X = {}> {
  * @param ioProviderClass 
  * @param repos The individual repositories: tables, users...
  */
-export function generate<C, X extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X>>): new <X extends DTOsMap>(config: C, dtoNames: Extract<keyof X, string>[]) => RepositoryGroup<X> {
+export function generate<C, X, D extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X, D>>): new (config: C, dtoNames: Extract<keyof X, string>[]) => RepositoryGroup<D> {
 	return class {
 		readonly io: Readonly<IOProvider<X>>
 
@@ -105,10 +103,10 @@ export function generate<C, X extends DTOsMap>(ioProviderClass: Ctor<C, IOProvid
 		protected createRepository<E extends Extract<keyof X, string>>(e: E) {
 			return {
 				findAsync: async (id: string) => this.io.findAsync({ entity: e, id: id }),
-				getAsync: async (selector?: { parentId?: string, filters?: FilterGroup<FromStore<E>> }) => {
+				getAsync: async (selector?: { parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => {
 					return this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
 				},
-				saveAsync: async (obj: X[E]["toStorage"]) => {
+				saveAsync: async (obj: D[E]["toStorage"]) => {
 					return obj.id
 						? this.io.saveAsync({ entity: e, obj, mode: "update" })
 						: this.io.saveAsync({ entity: e, obj, mode: "insert" })

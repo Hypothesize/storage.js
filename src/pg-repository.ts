@@ -2,9 +2,9 @@ import * as pgPromise from "pg-promise"
 import { String__ } from "./light_stdlib"
 import * as assert from 'assert'
 
-import { generate as generateRepository, FilterGroup, Filter, Filters, DTOsMap, Primitive, Obj } from "./repository"
+import { generate, FilterGroup, Filter, Filters, DTOsMap, Primitive, Obj } from "./repository"
 
-export const Repository = generateRepository(class {
+export const Repository = <D extends DTOsMap>() => generate<string, {}, D>(class {
 	readonly db: pgPromise.IDatabase<any>
 
 	constructor(dbUrl: string) {
