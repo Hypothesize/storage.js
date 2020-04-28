@@ -51,7 +51,7 @@ export interface RepositoryEditable<E extends keyof DTOsMap> extends RepositoryR
 export interface Repository<E extends keyof DTOsMap> extends RepositoryEditable<E> {
 	deleteAsync: (id: string) => Promise<void>
 }
-export type RepositoryGroup<X extends DTOsMap> = { [key in keyof X]: Repository<string> }
+export type RepositoryGroup<X extends DTOsMap> = { [key in keyof X]: Repository<Extract<keyof X, string>> }
 
 export type PassedObjects<X extends DTOsMap, I = {}> = {
 	[key in keyof X]: DTO
@@ -64,7 +64,6 @@ export type DTO = {
 	fromStorage: Object
 }
 export type DTOsMap = { [key: string]: DTO }
-
 
 export type ToStore<E extends keyof DTOsMap> = DTOsMap[E]["toStorage"]
 export type FromStore<E extends keyof DTOsMap> = DTOsMap[E]["fromStorage"]
@@ -87,11 +86,11 @@ export interface IOProvider<X = {}> {
  * @param ioProviderClass 
  * @param repos The individual repositories: tables, users...
  */
-export function generate<C, X>(ioProviderClass: Ctor<C, IOProvider<X>>): new <O extends DTOsMap>(config: C, dtoNames: (keyof O)[]) => RepositoryGroup<O> {
+export function generate<C, X, O extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X>>): new (config: C) => RepositoryGroup<O> {
 	return class {
 		readonly io: Readonly<IOProvider<X>>
 
-		constructor(config: C, dtoNames: string[]) {
+		constructor(config: C, dtoNames: Extract<keyof O, string>[]) {
 			try {
 				this.io = new ioProviderClass(config)
 			}
@@ -100,10 +99,10 @@ export function generate<C, X>(ioProviderClass: Ctor<C, IOProvider<X>>): new <O 
 			}
 			console.assert(this.io !== undefined, `Repository group this.io after construction is still undefined`)
 			dtoNames.forEach(prop => {
-				this[prop] = this.createRepository(prop)
+				this[prop as string] = this.createRepository(prop)
 			})
 		}
-		protected createRepository<E extends Extract<keyof DTOsMap, string>>(e: E, methods?: (keyof Repository<E>)[]) {
+		protected createRepository<E extends Extract<keyof O, string>>(e: E) {
 			return {
 				findAsync: async (id: string) => this.io.findAsync({ entity: e, id: id }),
 				getAsync: async (selector?: { parentId?: string, filters?: FilterGroup<FromStore<E>> }) => {

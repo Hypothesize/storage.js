@@ -47,7 +47,7 @@ export interface Repository<E extends keyof DTOsMap> extends RepositoryEditable<
     deleteAsync: (id: string) => Promise<void>;
 }
 export declare type RepositoryGroup<X extends DTOsMap> = {
-    [key in keyof X]: Repository<string>;
+    [key in keyof X]: Repository<Extract<keyof X, string>>;
 };
 export declare type PassedObjects<X extends DTOsMap, I = {}> = {
     [key in keyof X]: DTO;
@@ -94,5 +94,5 @@ export interface IOProvider<X = {}> {
  * @param ioProviderClass
  * @param repos The individual repositories: tables, users...
  */
-export declare function generate<C, X>(ioProviderClass: Ctor<C, IOProvider<X>>): new <O extends DTOsMap>(config: C, dtoNames: (keyof O)[]) => RepositoryGroup<O>;
+export declare function generate<C, X, O extends DTOsMap>(ioProviderClass: Ctor<C, IOProvider<X>>): new (config: C) => RepositoryGroup<O>;
 export {};
