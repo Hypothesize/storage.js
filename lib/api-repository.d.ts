@@ -1,4 +1,4 @@
 import { DTOsMap } from "./repository";
 export declare const Repository: new <O extends DTOsMap>(config: {
     baseUrl: string;
-}) => import("./repository").RepositoryGroup<O>;
+}, dtoNames: Extract<keyof O, string>[]) => import("./repository").RepositoryGroup<O>;
