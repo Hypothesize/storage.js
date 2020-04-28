@@ -74,43 +74,43 @@ export const Repository = generateRepositories(class {
 	}
 
 	extensions = {
-		/** Store raw data in S3 and returns a promise of the URL of the stored object
-		* @param data Data to be stored
-		* @param key Key used to identify the stored data
-		* @param string The URL where the data will be available, for instance the CloudFront base URL
-		*/
-		storeRawAsync: async (data: ArrayBuffer | Obj, key?: string, prefix?: string): Promise<string> => {
-			const _key = key ?? shortid.generate()
-			try {
-				await putAsync({
-					uri: await this.getPresignedS3UrlAsync(_key),
-					data: {
-						type: "text",
-						body: data instanceof ArrayBuffer
-							? arrayBufferToBase64(data)
-							: JSON.stringify(data)
-					}
-				})
-			}
-			catch (err) {
-				throw new Error(`Error uploading data: ${err}`)
-			}
+		// /** Store raw data in S3 and returns a promise of the URL of the stored object
+		// * @param data Data to be stored
+		// * @param key Key used to identify the stored data
+		// * @param string The URL where the data will be available, for instance the CloudFront base URL
+		// */
+		// storeRawAsync: async (data: ArrayBuffer | Obj, key?: string, prefix?: string): Promise<string> => {
+		// 	const _key = key ?? shortid.generate()
+		// 	try {
+		// 		await putAsync({
+		// 			uri: await this.getPresignedS3UrlAsync(_key),
+		// 			data: {
+		// 				type: "text",
+		// 				body: data instanceof ArrayBuffer
+		// 					? arrayBufferToBase64(data)
+		// 					: JSON.stringify(data)
+		// 			}
+		// 		})
+		// 	}
+		// 	catch (err) {
+		// 		throw new Error(`Error uploading data: ${err}`)
+		// 	}
 
-			return `${prefix}/${_key}`
-		},
+		// 	return `${prefix}/${_key}`
+		// },
 
-		/** Retrieve raw data from S3 (via cloudfront)
-		 * @param url S3 (Cloudfront) URL of the data to retreive
-		 */
-		getRawAsync: async (url: string): Promise<any> => {
-			try {
-				const resultMsg = await getAsync({ uri: url })
-				return JSON.parse(resultMsg.body)
-			}
-			catch (err) {
-				throw new Error(`Error getting or parsing raw data at URL "${url}`)
-			}
-		}
+		// /** Retrieve raw data from S3 (via cloudfront)
+		//  * @param url S3 (Cloudfront) URL of the data to retreive
+		//  */
+		// getRawAsync: async (url: string): Promise<any> => {
+		// 	try {
+		// 		const resultMsg = await getAsync({ uri: url })
+		// 		return JSON.parse(resultMsg.body)
+		// 	}
+		// 	catch (err) {
+		// 		throw new Error(`Error getting or parsing raw data at URL "${url}`)
+		// 	}
+		// }
 	}
 })
 

@@ -70,13 +70,12 @@ export const Repository = generateRepository(class {
 
 	extensions = {
 
-		unregisterAsync: async (id: string) => this.deleteAsync({ entity: "users", id }),
+		// unregisterAsync: async (id: string) => this.deleteAsync({ entity: "users", id }),
 
-		findUserAsync: async (userid: string) => this.findAsync({ entity: "users", id: userid }),
+		// findUserAsync: async (userid: string) => this.findAsync({ entity: "users", id: userid }),
 
-		insertResultsAsync: async (results: DTOsMap["results"]["toStorage"][]) => { throw new Error(`insertResultsAsync not implemented`) },
-		deleteResultsAsync: async (analysisId: string) => {
-		}
+		// insertResultsAsync: async (results: DTOsMap["results"]["toStorage"][]) => { throw new Error(`insertResultsAsync not implemented`) },
+		// deleteResultsAsync: async (analysisId: string) => {}
 	}
 
     /* protected async queryAsync<E extends ExEntity, K extends keyof E>(args: {
