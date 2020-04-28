@@ -1,3 +1,3 @@
 import { DTOsMap } from "./repository";
-export declare const Repository: new (config: string) => import("./repository").RepositoryGroup<DTOsMap>;
+export declare const Repository: new <O extends DTOsMap>(config: string) => import("./repository").RepositoryGroup<O>;
 export declare const testSuite: () => void;
