@@ -11,7 +11,7 @@ export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 export interface RepositoryEditable<D extends DTOsMap, E extends keyof D> extends RepositoryReadonly<D, E> {
     saveAsync: (obj: D[E]["toStorage"]) => Promise<D[E]["fromStorage"]>;
 }
-export interface Repository<D extends DTOsMap, E extends keyof DTOsMap> extends RepositoryEditable<D, E> {
+export interface Repository<D extends DTOsMap, E extends keyof D> extends RepositoryEditable<D, E> {
     deleteAsync: (id: string) => Promise<void>;
 }
 export declare type RepositoryGroup<D extends DTOsMap> = {

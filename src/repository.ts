@@ -11,7 +11,7 @@ export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 export interface RepositoryEditable<D extends DTOsMap, E extends keyof D> extends RepositoryReadonly<D, E> {
 	saveAsync: (obj: D[E]["toStorage"]) => Promise<D[E]["fromStorage"]>
 }
-export interface Repository<D extends DTOsMap, E extends keyof DTOsMap> extends RepositoryEditable<D, E> {
+export interface Repository<D extends DTOsMap, E extends keyof D> extends RepositoryEditable<D, E> {
 	deleteAsync: (id: string) => Promise<void>
 }
 export type RepositoryGroup<D extends DTOsMap> = { [key in keyof D]: Repository<D, Extract<keyof D, string>> }
@@ -34,7 +34,7 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 			}
 			console.assert(this.io !== undefined, `Repository group this.io after construction is still undefined`)
 			dtoNames.forEach(prop => {
-				this[prop as string] = this.createRepository(prop)
+				this[prop as string] = this.createRepository(prop) as Repository<D, typeof prop>
 			})
 		}
 		protected createRepository<E extends Extract<keyof D, string>>(e: E) {
@@ -50,7 +50,7 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 				},
 				// updateAsync: async (obj: ToStore<E>) => this.io.saveAsync({ entity: e, obj, mode: "update" }),
 				deleteAsync: async (id: string) => this.io.deleteAsync({ entity: e, id })
-			}
+			} as Repository<D, E>
 		}
 
 		get extensions() { return this.io.extensions }
