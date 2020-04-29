@@ -1,4 +1,6 @@
 
+import { DTOsMap, IOProvider, Ctor, FilterGroup } from "./types"
+
 export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 	/** find one entity object with a specific id, throws exception if not found */
 	findAsync(id: string): Promise<D[E]["fromStorage"]>

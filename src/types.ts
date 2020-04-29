@@ -1,16 +1,16 @@
-type Obj<TValue = any, TKey extends string = string> = { [key in TKey]: TValue }
-type ExtractByType<TObj, TType> = Pick<TObj, { [k in keyof TObj]-?: TObj[k] extends TType ? k : never }[keyof TObj]>
-type Primitive = number | string
+export type Obj<TValue = any, TKey extends string = string> = { [key in TKey]: TValue }
+export type ExtractByType<TObj, TType> = Pick<TObj, { [k in keyof TObj]-?: TObj[k] extends TType ? k : never }[keyof TObj]>
+export type Primitive = number | string
 
-interface Ctor<TArgs = {}, TObj = {}> { new (args: TArgs): TObj }
+export interface Ctor<TArgs = {}, TObj = {}> { new (args: TArgs): TObj }
 
 type DTO = {
 	toStorage: Object & { id?: string }
 	fromStorage: Object
 }
-type DTOsMap = { [key: string]: DTO }
+export type DTOsMap = { [key: string]: DTO }
 
-interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
+export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 	/** find one entity object, throws exception if not found */
 	findAsync: <E extends Extract<keyof D, string>>(args: { entity: E, id: string }) => Promise<D[E]["fromStorage"]>
 
@@ -23,7 +23,7 @@ interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 	extensions: X
 }
 
-declare namespace Filters {
+export namespace Filters {
 	export interface Base<TObj extends Obj<Primitive>, TVal extends Primitive | null> {
 		fieldName: keyof (ExtractByType<TObj, TVal>),
 		value: TVal,
@@ -52,7 +52,7 @@ type Filter<T extends Obj<Primitive> = Obj<Primitive>> = (
 	| Filters.Statistical<T>
 )
 
-interface FilterGroup<T extends Obj = Obj> {
+export interface FilterGroup<T extends Obj = Obj> {
 	/** combinator default is "and" */
 	combinator?: "or" | "and",
 
