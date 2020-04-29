@@ -30,6 +30,32 @@ interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
     }) => Promise<void>;
     extensions: X;
 }
+declare namespace Filters {
+    interface Base<TObj extends Obj<Primitive>, TVal extends Primitive | null> {
+        fieldName: keyof (ExtractByType<TObj, TVal>);
+        value: TVal;
+        negated?: boolean;
+    }
+    interface Categorical<T extends Obj<Primitive>> extends Base<T, Primitive | null> {
+        operator: "equal" | "not_equal";
+    }
+    interface Ordinal<T extends Obj<Primitive>> extends Base<T, number> {
+        operator: "greater" | "greater_or_equal" | "less" | "less_or_equal";
+        negated?: boolean;
+    }
+    interface Textual<T extends Obj<Primitive>> extends Base<T, string> {
+        operator: "contains" | "starts_with" | "ends_with";
+    }
+    interface Statistical<T extends Obj<Primitive>> extends Base<T, number> {
+        operator: "is_outlier_by";
+    }
+}
+declare type Filter<T extends Obj<Primitive> = Obj<Primitive>> = (Filters.Categorical<T> | Filters.Ordinal<T> | Filters.Textual<T> | Filters.Statistical<T>);
+interface FilterGroup<T extends Obj = Obj> {
+    /** combinator default is "and" */
+    combinator?: "or" | "and";
+    filters: (Filter<T> | FilterGroup<T>)[];
+}
 export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
     /** find one entity object with a specific id, throws exception if not found */
     findAsync(id: string): Promise<D[E]["fromStorage"]>;
