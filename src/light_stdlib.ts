@@ -3,7 +3,6 @@ import { cloneDeep, mergeWith } from "lodash"
 // import * as shortid from "shortid"
 type Obj<TValue = any, TKey extends string = string> = { [key in TKey]: TValue }
 type Primitive = number | string /*| boolean*/ | Date
-type Omit<T, K extends keyof T> = { [P in Exclude<keyof T, K>]: T[P] };
 
 export type Comparer<X = any, Y = number> = (a?: X, b?: X) => Y
 export type Projector<X = any, Y = any, I = number> = (value: X, index?: I) => Y;
