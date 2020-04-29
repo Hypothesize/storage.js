@@ -4,25 +4,6 @@ type Primitive = number | string
 
 interface Ctor<TArgs = {}, TObj = {}> { new (args: TArgs): TObj }
 
-type DTO = {
-	toStorage: Object & { id?: string }
-	fromStorage: Object
-}
-type DTOsMap = { [key: string]: DTO }
-
-interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
-	/** find one entity object, throws exception if not found */
-	findAsync: <E extends Extract<keyof D, string>>(args: { entity: E, id: string }) => Promise<D[E]["fromStorage"]>
-
-	/** get a set of entity objects */
-	getAsync: <E extends Extract<keyof D, string>>(args: { entity: E, parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => Promise<D[E]["fromStorage"][]>
-
-	saveAsync: <E extends Extract<keyof D, string>>(args: { entity: E, obj: D[E]["toStorage"], mode: "insert" | "update" }) => Promise<D[E]["fromStorage"]>
-	deleteAsync: <E extends Extract<keyof D, string>>(args: { entity: E, id: string }) => Promise<void>
-
-	extensions: X
-}
-
 declare namespace Filters {
 	export interface Base<TObj extends Obj<Primitive>, TVal extends Primitive | null> {
 		fieldName: keyof (ExtractByType<TObj, TVal>),
