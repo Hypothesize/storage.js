@@ -14,9 +14,6 @@
 		"type": "git",
 		"url": "git+https://github.com/Hypothesize/repository.ts.git"
 	},
-	"files": [
-		"lib/**/*"
-	],
 	"keywords": [
 		"repository",
 		"postgres",
