@@ -1,5 +1,5 @@
 {
-	"name": "hypothesize-repository",
+	"name": "repositoryts",
 	"version": "0.0.5",
 	"description": "Database access through the repository pattern in Javascript/TypeScript",
 	"main": "./lib/index.js",
