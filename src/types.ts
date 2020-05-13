@@ -25,8 +25,8 @@ export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 
 export namespace Filters {
 	export interface Base<TObj extends Obj<Primitive>, TVal extends Primitive | null> {
-		fieldName: keyof (ExtractByType<TObj, TVal>),
-		value: TVal,
+		fieldName: keyof (ExtractByType<TObj, TVal>)
+		value: TVal
 		negated?: boolean
 	}
 	export interface Categorical<T extends Obj<Primitive>> extends Base<T, Primitive | null> {
