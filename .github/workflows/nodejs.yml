@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x]
+        node-version: [12.x]
 
     steps:
     - name: Check out Git repository
@@ -26,7 +26,9 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-        
+       
+    - run: npm install
+    
     - name: Run linters
       uses: samuelmeuli/lint-action@v1
       with:
