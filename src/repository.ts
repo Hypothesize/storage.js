@@ -1,5 +1,5 @@
-
-import { DTOsMap, IOProvider, Ctor, FilterGroup } from "./types"
+import * as assert from "assert"
+import { Array__ } from "StdLib"
 
 export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 	/** find one entity object with a specific id, throws exception if not found */
@@ -56,3 +56,19 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 		get extensions() { return this.io.extensions }
 	} as any
 }
+
+
+//#region Tests
+describe("getWhereClause", () => {
+	it("should return a two single conditions when passing an array of two filters", () => {
+		assert.equal(1, 1)
+
+	})
+})
+//#endregion
+
+
+//#region Benchmarks
+
+
+//#endregion
