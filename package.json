@@ -27,6 +27,7 @@
 	},
 	"homepage": "https://github.com/Hypothesize/repository.ts#readme",
 	"devDependencies": {
+		"@kfed/eslint-formatter-gitlab": "^2.0.4",
 		"@types/assert": "^1.4.6",
 		"@types/lodash": "^4.14.150",
 		"@types/mocha": "^7.0.2",
