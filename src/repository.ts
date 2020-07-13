@@ -46,13 +46,13 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 				},
 				saveAsync: async (obj: D[E]["toStorage"]) => {
 					return obj.id
-						? this.io.saveAsync({ entity: e, obj: obj, mode: "update" })
-						: this.io.saveAsync({ entity: e, obj: obj, mode: "insert" })
+						? this.io.saveAsync({ entity: e, obj: obj, mode: "update", quantity: "single" })
+						: this.io.saveAsync({ entity: e, obj: obj, mode: "insert", quantity: "single" })
 				},
 				saveSeveralAsync: async (objects: D[E]["toStorage"][]) => {
 					return objects[0].id
-						? this.io.saveAsync<E, "multi">({ entity: e, obj: objects, mode: "update" })
-						: this.io.saveAsync<E, "multi">({ entity: e, obj: objects, mode: "insert" })
+						? this.io.saveAsync({ entity: e, obj: objects, mode: "update", quantity: "multi" })
+						: this.io.saveAsync({ entity: e, obj: objects, mode: "insert", quantity: "multi" })
 				},
 				deleteAsync: async (id: string) => this.io.deleteAsync({ entity: e, id })
 			} as Repository<D, E>

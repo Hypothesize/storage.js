@@ -20,7 +20,8 @@ export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 	saveAsync: <E extends Extract<keyof D, string>, M extends "multi" | "single" = "single">(args: {
 		entity: E,
 		obj: M extends "single" ? D[E]["toStorage"] : D[E]["toStorage"][],
-		mode: "insert" | "update"
+		mode: "insert" | "update",
+		quantity: M
 	}) => Promise<M extends "single" ? D[E]["fromStorage"] : D[E]["fromStorage"][]>
 	deleteAsync: <E extends Extract<keyof D, string>>(args: { entity: E, id: string }) => Promise<void>
 
