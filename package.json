@@ -1,0 +1,42 @@
+{
+	"name": "storage",
+	"version": "0.0.5",
+	"description": "Database access through the repository pattern in Javascript/TypeScript",
+	"main": "./lib/index.js",
+	"declaration": true,
+	"types": "./lib/index.d.ts",
+	"scripts": {
+		"test": "mocha test\\",
+		"build": "tsc",
+		"prepare": "tsc"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Hypothesize/repository.ts.git"
+	},
+	"keywords": [
+		"repository",
+		"postgres",
+		"hypothesize",
+		"database"
+	],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/Hypothesize/repository.ts/issues"
+	},
+	"homepage": "https://github.com/Hypothesize/repository.ts#readme",
+	"devDependencies": {
+		"@types/assert": "^1.4.6",
+		"@types/lodash": "^4.14.150",
+		"@types/mocha": "^7.0.2",
+		"assert": "^2.0.0",
+		"mocha": "^7.1.1",
+		"typescript": "^3.8.3"
+	},
+	"dependencies": {
+		"@types/shortid": "0.0.29",
+		"shortid": "^2.2.15",
+		"standard": "git+https://github.com/Hypothesize/standard.git"
+	}
+}
