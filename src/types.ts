@@ -17,12 +17,11 @@ export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 	/** get a set of entity objects */
 	getAsync: <E extends Extract<keyof D, string>>(args: { entity: E, parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => Promise<D[E]["fromStorage"][]>
 
-	saveAsync: <E extends Extract<keyof D, string>, M extends "multi" | "single" = "single">(args: {
+	saveAsync: <E extends Extract<keyof D, string>>(args: {
 		entity: E,
-		obj: M extends "single" ? D[E]["toStorage"] : D[E]["toStorage"][],
-		mode: "insert" | "update",
-		quantity: M
-	}) => Promise<M extends "single" ? D[E]["fromStorage"] : D[E]["fromStorage"][]>
+		obj: D[E]["toStorage"][],
+		mode: "insert" | "update"
+	}) => Promise<D[E]["fromStorage"][]>
 	deleteAsync: <E extends Extract<keyof D, string>>(args: { entity: E, id: string }) => Promise<void>
 
 	extensions: X
