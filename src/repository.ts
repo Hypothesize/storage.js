@@ -13,7 +13,7 @@ export interface RepositoryEditable<D extends DTOsMap, E extends keyof D> extend
 }
 export interface Repository<D extends DTOsMap, E extends keyof D> extends RepositoryEditable<D, E> {
 	deleteAsync: (id: string) => Promise<void>
-	deleteManyAsync: (id: string) => Promise<void>
+	deleteManyAsync?: (id: string) => Promise<void>
 }
 export type RepositoryGroup<D extends DTOsMap> = { [key in keyof D]: Repository<D, Extract<keyof D, string>> }
 
