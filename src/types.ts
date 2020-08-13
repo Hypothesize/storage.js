@@ -22,7 +22,8 @@ export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 		obj: D[E]["toStorage"][],
 		mode: "insert" | "update"
 	}) => Promise<D[E]["fromStorage"][]>
-	deleteAsync: <E extends Extract<keyof D, string>>(args: { entity: E, id: string }) => Promise<void>
+	deleteAsync: <E extends Extract<keyof D, string>>(args: { entity: E, ids: string[] }) => Promise<void>
+	deleteChildrenAsync: <E extends Extract<keyof D, string>>(args: { entity: E, parentId: string }) => Promise<void>
 
 	extensions: X
 }
