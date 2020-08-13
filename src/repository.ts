@@ -12,8 +12,8 @@ export interface RepositoryEditable<D extends DTOsMap, E extends keyof D> extend
 	saveAsync: (obj: D[E]["toStorage"][]) => Promise<D[E]["fromStorage"][]>
 }
 export interface Repository<D extends DTOsMap, E extends keyof D> extends RepositoryEditable<D, E> {
-	deleteAsync: (id: string[]) => Promise<void>
-	deleteChildrenAsync: (id: string) => Promise<void>
+	deleteAsync: (id: string) => Promise<void>
+	deleteManyAsync: (id: string) => Promise<void>
 }
 export type RepositoryGroup<D extends DTOsMap> = { [key in keyof D]: Repository<D, Extract<keyof D, string>> }
 
@@ -49,8 +49,13 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 						? this.io.saveAsync({ entity: e, obj: obj, mode: "update" })
 						: this.io.saveAsync({ entity: e, obj: obj, mode: "insert" })
 				},
-				deleteAsync: async (ids: string[]) => this.io.deleteAsync({ entity: e, ids }),
-				deleteChildrenAsync: async (parentId: string) => this.io.deleteChildrenAsync({ entity: e, parentId })
+				deleteAsync: async (id: string) => this.io.deleteAsync({ entity: e, id }),
+				deleteManyAsync: async (ids: string | string[]) => this.io.deleteManyAsync({
+					entity: e,
+					...typeof (ids) === "string"
+						? { parentId: ids }
+						: { ids: ids }
+				})
 			} as Repository<D, E>
 		}
 
