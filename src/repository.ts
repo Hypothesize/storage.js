@@ -40,7 +40,16 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 		}
 		protected createRepository<E extends Extract<keyof D, string>>(e: E) {
 			return {
-				findAsync: async (id: string) => this.io.findAsync({ entity: e, id: id }),
+				findAsync: async (id: string) => {
+					if (this.io.cache) {
+						if (this.io.cache[id] === undefined) {
+							this.io.cache[id] === this.io.findAsync({ entity: e, id: id })
+						}
+						return this.io.cache[id]
+					} else {
+						return this.io.findAsync({ entity: e, id: id })
+					}
+				},
 				getAsync: async (selector?: { parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => {
 					return this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
 				},
