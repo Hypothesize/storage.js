@@ -22,7 +22,7 @@ export type RepositoryGroup<D extends DTOsMap> = { [key in keyof D]: Repository<
  * @param ioProviderClass 
  * @param repos The individual repositories: tables, users...
  */
-export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: Extract<keyof D, string>[]) => RepositoryGroup<D> {
+export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: Extract<keyof D, string>[], cache?: boolean) => RepositoryGroup<D> {
 	return class {
 		readonly io: Readonly<IOProvider<X>>
 		readonly cache?: { [key: string]: D[Extract<keyof D, string>]["fromStorage"] | D[Extract<keyof D, string>]["fromStorage"][] }
