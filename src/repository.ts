@@ -54,7 +54,7 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 				},
 				getAsync: async (selector?: { parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => {
 					if (this.cache) {
-						const args = JSON.stringify(selector)
+						const args = JSON.stringify({ entity: e, selector: selector })
 						if (this.cache[args] === undefined) {
 							this.cache[args] = this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
 						}
