@@ -45,7 +45,7 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 				findAsync: async (id: string) => {
 					if (this.cache) {
 						if (this.cache[id] === undefined) {
-							this.cache[id] === this.io.findAsync({ entity: e, id: id })
+							this.cache[id] = this.io.findAsync({ entity: e, id: id })
 						}
 						return this.cache[id]
 					} else {
@@ -56,7 +56,7 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 					if (this.cache) {
 						const args = JSON.stringify(selector)
 						if (this.cache[args] === undefined) {
-							this.cache[args] === this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
+							this.cache[args] = this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
 						}
 						return this.cache[args]
 					}
