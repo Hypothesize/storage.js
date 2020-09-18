@@ -25,10 +25,12 @@ export type RepositoryGroup<D extends DTOsMap> = { [key in keyof D]: Repository<
 export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: Extract<keyof D, string>[]) => RepositoryGroup<D> {
 	return class {
 		readonly io: Readonly<IOProvider<X>>
+		readonly cache?: { [key: string]: D[Extract<keyof D, string>]["fromStorage"] | D[Extract<keyof D, string>]["fromStorage"][] }
 
-		constructor(config: object, dtoNames: Extract<keyof D, string>[]) {
+		constructor(config: object, dtoNames: Extract<keyof D, string>[], cache?: boolean) {
 			try {
 				this.io = new ioProviderClass(config)
+				this.cache = cache ? {} : undefined
 			}
 			catch (err) {
 				throw new Error(`Repository group constructor : ${err} `)
@@ -41,17 +43,26 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 		protected createRepository<E extends Extract<keyof D, string>>(e: E) {
 			return {
 				findAsync: async (id: string) => {
-					if (this.io.cache) {
-						if (this.io.cache[id] === undefined) {
-							this.io.cache[id] === this.io.findAsync({ entity: e, id: id })
+					if (this.cache) {
+						if (this.cache[id] === undefined) {
+							this.cache[id] === this.io.findAsync({ entity: e, id: id })
 						}
-						return this.io.cache[id]
+						return this.cache[id]
 					} else {
 						return this.io.findAsync({ entity: e, id: id })
 					}
 				},
 				getAsync: async (selector?: { parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => {
-					return this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
+					if (this.cache) {
+						const args = JSON.stringify(selector)
+						if (this.cache[args] === undefined) {
+							this.cache[args] === this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
+						}
+						return this.cache[args]
+					}
+					else {
+						return this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
+					}
 				},
 				saveAsync: async (obj: D[E]["toStorage"][]) => {
 					return obj[0].id
