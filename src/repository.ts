@@ -1,5 +1,5 @@
 
-import { DTOsMap, IOProvider, Ctor, FilterGroup } from "./types"
+import { DTOsMap, IOProvider, Ctor, FilterGroup, CacheEntry } from "./types"
 
 export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 	/** find one entity object with a specific id, throws exception if not found */
@@ -7,6 +7,7 @@ export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 
 	/** get entity objects with optional parent and additional filters ... */
 	getAsync(args: { parentId: string, filters?: FilterGroup<D[E]["fromStorage"]> }): Promise<D[E]["fromStorage"][]>
+	bustCache?(key: CacheEntry<D>): () => void
 }
 export interface RepositoryEditable<D extends DTOsMap, E extends keyof D> extends RepositoryReadonly<D, E> {
 	saveAsync: (obj: D[E]["toStorage"][]) => Promise<D[E]["fromStorage"][]>
@@ -25,12 +26,12 @@ export type RepositoryGroup<D extends DTOsMap> = { [key in keyof D]: Repository<
 export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: Extract<keyof D, string>[], cache?: boolean) => RepositoryGroup<D> {
 	return class {
 		readonly io: Readonly<IOProvider<X>>
-		readonly cache?: { [key: string]: D[Extract<keyof D, string>]["fromStorage"] | D[Extract<keyof D, string>]["fromStorage"][] }
+		readonly cache?: CacheEntry<D>[]
 
 		constructor(config: object, dtoNames: Extract<keyof D, string>[], cache?: boolean) {
 			try {
 				this.io = new ioProviderClass(config)
-				this.cache = cache ? {} : undefined
+				this.cache = cache ? [] : undefined
 			}
 			catch (err) {
 				throw new Error(`Repository group constructor : ${err} `)
@@ -44,24 +45,40 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 			return {
 				findAsync: async (id: string) => {
 					if (this.cache) {
-						if (this.cache[id] === undefined) {
-							this.cache[id] = this.io.findAsync({ entity: e, id: id })
+						if (this.cache.find(entry => entry.type === "find" && entry.key === id) === undefined) {
+							this.cache.push({ type: "find", key: id, content: this.io.findAsync({ entity: e, id: id }) })
 						}
-						return this.cache[id]
+						return this.cache.find(entry => entry.type === "find" && entry.key === id)
 					} else {
 						return this.io.findAsync({ entity: e, id: id })
 					}
 				},
 				getAsync: async (selector?: { parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => {
 					if (this.cache) {
-						const args = JSON.stringify({ entity: e, selector: selector })
-						if (this.cache[args] === undefined) {
-							this.cache[args] = this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
+						if (this.cache.find(entry => entry.type === "get"
+							&& entry.keys.entity === e
+							&& entry.keys.parentId === selector.parentId
+							&& entry.keys.filters === JSON.stringify(selector.filters)
+						) === undefined) {
+							this.cache.push({
+								type: "get",
+								keys: { entity: e, parentId: selector.parentId, filters: JSON.stringify(selector.filters) },
+								content: this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
+							})
 						}
-						return this.cache[args]
+						return this.cache.find(entry => entry.type === "get"
+							&& entry.keys.entity === e
+							&& entry.keys.parentId === selector.parentId
+							&& entry.keys.filters === JSON.stringify(selector.filters)
+						)
 					}
 					else {
 						return this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
+					}
+				},
+				bustCache: (entry: CacheEntry<D>) => {
+					if (this.cache) {
+						this.io.bustCache(entry)
 					}
 				},
 				saveAsync: async (obj: D[E]["toStorage"][]) => {

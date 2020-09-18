@@ -9,14 +9,22 @@ type DTO = {
 	fromStorage: Object
 }
 export type DTOsMap = { [key: string]: DTO }
-
+export type CacheEntry<D extends DTOsMap> = {
+	type: "find"
+	key: string,
+	content: Promise<D[Extract<keyof D, string>]["fromStorage"]>
+} | {
+	type: "get"
+	keys: { entity: Extract<keyof D, string>, parentId: string, filters: string },
+	content: Promise<D[Extract<keyof D, string>]["fromStorage"][]>
+}
 export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 	/** find one entity object, throws exception if not found */
 	findAsync: <E extends Extract<keyof D, string>>(args: { entity: E, id: string }) => Promise<D[E]["fromStorage"]>
 
 	/** get a set of entity objects */
 	getAsync: <E extends Extract<keyof D, string>>(args: { entity: E, parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => Promise<D[E]["fromStorage"][]>
-
+	bustCache: (entry: CacheEntry<D>) => void
 	saveAsync: <E extends Extract<keyof D, string>>(args: {
 		entity: E,
 		obj: D[E]["toStorage"][],
