@@ -12,11 +12,11 @@ export type DTOsMap = { [key: string]: DTO }
 export type CacheEntry<D extends DTOsMap> = {
 	type: "find"
 	key: string,
-	content: Promise<D[Extract<keyof D, string>]["fromStorage"]>
+	content?: Promise<D[Extract<keyof D, string>]["fromStorage"]>
 } | {
 	type: "get"
 	keys: { entity: Extract<keyof D, string>, parentId: string, filters: string },
-	content: Promise<D[Extract<keyof D, string>]["fromStorage"][]>
+	content?: Promise<D[Extract<keyof D, string>]["fromStorage"][]>
 }
 export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 	/** find one entity object, throws exception if not found */
