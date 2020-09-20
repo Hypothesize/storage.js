@@ -76,23 +76,6 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 						return this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
 					}
 				},
-				bustCache: (entry: CacheEntry<D>) => {
-					if (this.cache) {
-						if (entry.type === "find") {
-							this.cache = this.cache.filter(async el => {
-								return el !== entry
-							})
-						}
-						else {
-							this.cache = this.cache.filter(async el => {
-								return !(el.type === "get"
-									&& el.keys.entity === entry.keys.entity
-									&& el.keys.parentId === entry.keys.parentId
-									&& el.keys.filters === entry.keys.filters)
-							})
-						}
-					}
-				},
 				saveAsync: async (obj: D[E]["toStorage"][]) => {
 					return obj[0].id
 						? this.io.saveAsync({ entity: e, obj: obj, mode: "update" })
