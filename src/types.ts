@@ -15,7 +15,7 @@ export type CacheEntry<D extends DTOsMap> = {
 	content?: Promise<D[Extract<keyof D, string>]["fromStorage"]>
 } | {
 	type: "get"
-	keys: { entity: Extract<keyof D, string>, parentId: string, filters: string },
+	keys: { entity: Extract<keyof D, string>, parentId: string, filters?: string },
 	content?: Promise<D[Extract<keyof D, string>]["fromStorage"][]>
 }
 export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
