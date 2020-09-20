@@ -26,7 +26,7 @@ export type RepositoryGroup<D extends DTOsMap> = { [key in keyof D]: Repository<
 export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: Extract<keyof D, string>[], cache?: boolean) => RepositoryGroup<D> {
 	return class {
 		readonly io: Readonly<IOProvider<X>>
-		readonly cache?: CacheEntry<D>[]
+		cache?: CacheEntry<D>[]
 
 		constructor(config: object, dtoNames: Extract<keyof D, string>[], cache?: boolean) {
 			try {
@@ -78,7 +78,19 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 				},
 				bustCache: (entry: CacheEntry<D>) => {
 					if (this.cache) {
-						this.io.bustCache(entry)
+						if (entry.type === "find") {
+							this.cache = this.cache.filter(async el => {
+								return el !== entry
+							})
+						}
+						else {
+							this.cache = this.cache.filter(async el => {
+								return !(el.type === "get"
+									&& el.keys.entity === entry.keys.entity
+									&& el.keys.parentId === entry.keys.parentId
+									&& el.keys.filters === entry.keys.filters)
+							})
+						}
 					}
 				},
 				saveAsync: async (obj: D[E]["toStorage"][]) => {
