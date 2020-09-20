@@ -24,7 +24,6 @@ export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 
 	/** get a set of entity objects */
 	getAsync: <E extends Extract<keyof D, string>>(args: { entity: E, parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => Promise<D[E]["fromStorage"][]>
-	bustCache: (entry: CacheEntry<D>) => void
 	saveAsync: <E extends Extract<keyof D, string>>(args: {
 		entity: E,
 		obj: D[E]["toStorage"][],
