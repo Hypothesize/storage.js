@@ -48,7 +48,7 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 						if (this.cache.find(entry => entry.type === "find" && entry.key === id) === undefined) {
 							this.cache.push({ type: "find", key: id, content: this.io.findAsync({ entity: e, id: id }) })
 						}
-						return this.cache.find(entry => entry.type === "find" && entry.key === id)
+						return this.cache.find(entry => entry.type === "find" && entry.key === id).content
 					} else {
 						return this.io.findAsync({ entity: e, id: id })
 					}
@@ -70,7 +70,7 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 							&& entry.keys.entity === e
 							&& entry.keys.parentId === selector.parentId
 							&& entry.keys.filters === JSON.stringify(selector.filters)
-						)
+						).content
 					}
 					else {
 						return this.io.getAsync({ entity: e, parentId: selector?.parentId, filters: selector?.filters })
