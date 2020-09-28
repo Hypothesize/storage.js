@@ -7,7 +7,10 @@ export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 
 	/** get entity objects with optional parent and additional filters ... */
 	getAsync(args: { parentId: string, filters?: FilterGroup<D[E]["fromStorage"]> }): Promise<D[E]["fromStorage"][]>
-	bustCache?(key: CacheEntry<D>): () => void
+	/** A reference to the cache of the RepositoryGroup */
+	cache: CacheEntry<D>[]
+	/** A method to remove an entry from the cache */
+	bustCache?(entry: CacheEntry<D>): () => void
 }
 export interface RepositoryEditable<D extends DTOsMap, E extends keyof D> extends RepositoryReadonly<D, E> {
 	saveAsync: (obj: D[E]["toStorage"][]) => Promise<D[E]["fromStorage"][]>
@@ -16,32 +19,34 @@ export interface Repository<D extends DTOsMap, E extends keyof D> extends Reposi
 	deleteAsync: (id: string) => Promise<D[E]["fromStorage"]>
 	deleteManyAsync?: (args: { parentId: string } | { ids: string[] }) => Promise<D[E]["fromStorage"][]>
 }
-export type RepositoryGroup<D extends DTOsMap> = { [key in keyof D]: Repository<D, Extract<keyof D, string>> }
+export type RepositoryGroup<D extends DTOsMap> = {
+	[key in keyof D]: Repository<D, Extract<keyof D, string>>
+} & { cache: CacheEntry<D>[] }
 
 /**
  * 
  * @param ioProviderClass 
  * @param repos The individual repositories: tables, users...
  */
-export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: Extract<keyof D, string>[], cache?: boolean) => RepositoryGroup<D> {
+export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: Extract<keyof D, string>[], cache: CacheEntry<D>[]) => RepositoryGroup<D> {
 	return class {
 		readonly io: Readonly<IOProvider<X>>
 		cache?: CacheEntry<D>[]
 
-		constructor(config: object, dtoNames: Extract<keyof D, string>[], cache?: boolean) {
+		constructor(config: object, dtoNames: Extract<keyof D, string>[], cache: CacheEntry<D>[]) {
 			try {
-				this.io = new ioProviderClass(config)
-				this.cache = cache ? [] : undefined
+				this.io = new ioProviderClass({ ...config, cache: cache })
+				this.cache = cache
 			}
 			catch (err) {
 				throw new Error(`Repository group constructor : ${err} `)
 			}
 			console.assert(this.io !== undefined, `Repository group this.io after construction is still undefined`)
 			dtoNames.forEach(prop => {
-				this[prop as string] = this.createRepository(prop) as Repository<D, typeof prop>
+				this[prop as string] = this.createRepository(prop, this.cache) as Repository<D, typeof prop>
 			})
 		}
-		protected createRepository<E extends Extract<keyof D, string>>(e: E) {
+		protected createRepository<E extends Extract<keyof D, string>>(e: E, cache: CacheEntry<D>[]) {
 			return {
 				findAsync: async (id: string) => {
 					if (this.cache) {
@@ -87,7 +92,8 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 					...args["parentId"] !== undefined
 						? { parentId: args["parentId"] }
 						: { ids: args["ids"] }
-				})
+				}),
+				cache: cache
 			} as Repository<D, E>
 		}
 
