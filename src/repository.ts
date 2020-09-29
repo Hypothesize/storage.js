@@ -21,19 +21,19 @@ export interface Repository<D extends DTOsMap, E extends keyof D> extends Reposi
 }
 export type RepositoryGroup<D extends DTOsMap> = {
 	[key in keyof D]: Repository<D, Extract<keyof D, string>>
-} & { cache: CacheEntry<D>[] }
+} & { cache?: CacheEntry<D>[] }
 
 /**
  * 
  * @param ioProviderClass 
  * @param repos The individual repositories: tables, users...
  */
-export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: Extract<keyof D, string>[], cache: CacheEntry<D>[]) => RepositoryGroup<D> {
+export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: Extract<keyof D, string>[], cache?: CacheEntry<D>[]) => RepositoryGroup<D> {
 	return class {
 		readonly io: Readonly<IOProvider<X>>
 		cache?: CacheEntry<D>[]
 
-		constructor(config: object, dtoNames: Extract<keyof D, string>[], cache: CacheEntry<D>[]) {
+		constructor(config: object, dtoNames: Extract<keyof D, string>[], cache?: CacheEntry<D>[]) {
 			try {
 				this.io = new ioProviderClass({ ...config, cache: cache })
 				this.cache = cache
