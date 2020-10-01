@@ -35,17 +35,17 @@ export namespace Filters {
 		negated?: boolean
 	}
 	export interface Categorical<T extends Obj<Primitive>> extends Base<T, Primitive | null> {
-		operator: "equal" | "not_equal",
+		operator: "equal" | "not_equal" | "blank",
 	}
 	export interface Ordinal<T extends Obj<Primitive>> extends Base<T, number> {
-		operator: "greater" | "greater_or_equal" | "less" | "less_or_equal",
+		operator: "greater" | "greater_or_equal" | "less" | "less_or_equal" | "blank",
 		negated?: boolean
 	}
 	export interface Textual<T extends Obj<Primitive>> extends Base<T, string> {
-		operator: "contains" | "starts_with" | "ends_with",
+		operator: "contains" | "starts_with" | "ends_with" | "blank",
 	}
 	export interface Statistical<T extends Obj<Primitive>> extends Base<T, number> {
-		operator: "is_outlier_by",
+		operator: "is_outlier_by" | "blank",
 		/** number of std. deviations (possibly fractional) */
 		//value: number
 	}

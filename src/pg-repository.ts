@@ -13,7 +13,7 @@ const pgErrorsCode = {
 	NOT_NULL_VIOLATION: "23502"
 }
 
-export const PgRepository = <Map extends DTOsMap>() => {
+export const PgRepository = <Map extends DTOsMap>(extensions: { [key: string]: Promise<any> }) => {
 	return generate<{}, Map>(class {
 		readonly db: pgPromise.IDatabase<any>
 
@@ -105,94 +105,15 @@ export const PgRepository = <Map extends DTOsMap>() => {
 			throw new Error("Not implemented")
 		}
 
-		extensions = {
-			createTableAndColumnsAsync: async (table: Entities.Table.ForStorage, columns: Entities.Column.ForStorage[]) => {
-				return this.db.tx(t => {
-					return t.one({
-						text: `SELECT * from insert_table($1) as result`,
-						values: [table]
-					})
-						.then((savedTable: {}) => {
-							return t.batch(columns.map(obj => t.one(`SELECT insert_column($1) as result`, JSON.stringify(obj))))
-						})
-				})
-					.then(data => {
-						return true
-					})
-					.catch(err => {
-						console.error(`Could not save the table + columns: ${err.message}`)
-						return false
-					})
-			},
-			addFav: async (userId: string, projectId: String) => {
-				try {
-					await this.db.any("SELECT * FROM toggle_favorites($1, $2, 'add');", [projectId, userId])
-					return true
-				}
-				catch (err) {
-					throw new Error(err)
-				}
-			},
-			removeFav: async (userId: string, projectId: String) => {
-				try {
-					await this.db.any("SELECT * FROM toggle_favorites($1, $2, 'remove');", [projectId, userId])
-					return true
-				}
-				catch (err) {
-					throw new Error(err)
-				}
-			},
-			authenticateAsync: async (credentials: { email: string, pwd: string }): Promise<Entities.User.FromStorage | undefined> => {
-				const dbUsers = await this.getAsync({
-					entity: "users",
-					parentId: "",
-					filters: { filters: [{ fieldName: "emailAddress", operator: "equal", value: credentials.email }] }
-				})
-				const dbUser = dbUsers[0]
-				if (!dbUser) return undefined
-				return new Promise(resolve => {
-					bcrypt.compare(credentials.pwd, dbUser.pwdHash, (error: Error, result: boolean) => {
-						if (result === true) {
-							resolve(dbUser)
-						}
-						else {
-							console.log(error)
-							resolve(undefined)
-						}
-					})
-				})
-			},
-			registerAsync: async (args: Entities.User.ForStorage & { password: string }): Promise<Entities.User.FromStorage[]> => {
-				const { password, ...user } = args
-				const salt = bcrypt.genSaltSync()
-				const pwdHash = bcrypt.hashSync(password, salt)
-				const userToBeRegistered: Entities.User.ForStorage = {
-					...entityDefaults.user,
-					...user,
-					pwdHash: pwdHash,
-					pwdSalt: salt
-				}
-				return await this.saveAsync({ entity: "users", obj: [userToBeRegistered], mode: "insert" })
-			},
-
-			unregisterAsync: async (id: string) => this.deleteAsync({ entity: "users", id }),
-
-			findUserAsync: async (userid: string) => this.findAsync({ entity: "users", id: userid }),
-			//getUsersAsync: async (role: User["role"]) => this.getAsync("user", { role }),
-			updateUserAsync: async (obj: Entities.User.ForStorage) => this.saveAsync({ entity: "users", obj: [obj], mode: "update" }),
-
-			insertResultsAsync: async (results: DTOsMap["results"]["toStorage"][]) => { throw new Error(`Not implemented: insertResultsAsync`) },
-			deleteResultsAsync: async (analysisId: string) => {
-			}
-		}
+		extensions = extensions
 	})
 }
 
 function getTableName(entityName: keyof DTOsMap): string {
-	return new String__(entityName as string).toLocaleLowerCase()
+	return entityName.toString().toLocaleLowerCase()
 }
 function getColumnName(propertyName: string): string {
-	return new String__(propertyName).toSnakeCase().toLocaleLowerCase()
+	return new String__(propertyName).toSnakeCase().toString().toLocaleLowerCase()
 }
 
 function getWhereClause(filter: FilterGroup<any>): string {
