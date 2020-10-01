@@ -50,7 +50,7 @@ export namespace Filters {
 		//value: number
 	}
 }
-type Filter<T extends Obj<Primitive> = Obj<Primitive>> = (
+export type Filter<T extends Obj<Primitive> = Obj<Primitive>> = (
 	| Filters.Categorical<T>
 	| Filters.Ordinal<T>
 	| Filters.Textual<T>
