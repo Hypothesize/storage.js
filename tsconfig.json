@@ -3,7 +3,10 @@
 		"target": "es2015",
 		"module": "commonjs",
 		"declaration": true,
-		"outDir": "./dist"
+		"outDir": "./dist",
+		"strictNullChecks": true,
+		"strict": true,
+		"incremental": true
 	},
 	"types": "dist/index.d.ts",
 	"include": [
