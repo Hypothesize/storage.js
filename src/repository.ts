@@ -16,25 +16,25 @@ export interface RepositoryReadonly<D extends DTOsMap, E extends Extract<keyof D
 export interface RepositoryEditable<D extends DTOsMap, E extends Extract<keyof D, "string">> extends RepositoryReadonly<D, E> {
 	saveAsync: (obj: D[E]["toStorage"][]) => Promise<D[E]["fromStorage"][]>
 }
-export interface Repository<D extends DTOsMap, E extends Extract<keyof D, "string">> extends RepositoryEditable<D, E> {
+export interface Repository<D extends DTOsMap, E extends keyof D> extends RepositoryEditable<D, E> {
 	deleteAsync: (id: string) => Promise<D[E]["fromStorage"]>
 	deleteManyAsync?: (args: { parentId: string } | { ids: string[] }) => Promise<D[E]["fromStorage"][]>
 }
 export type RepositoryGroup<D extends DTOsMap> = {
-	[key in Extract<keyof D, "string">]: Repository<D, Extract<keyof D, "string">>
+	[key in keyof D]: Repository<D, keyof D>
 } & { cache?: CacheEntry<D>[] }
 
 /** Generates a repository group from the io provider
  * @param ioProviderClass 
  * @param repos The individual repositories: tables, users...
  */
-export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: (Extract<keyof D, "string">)[], cache?: CacheEntry<D>[]) => RepositoryGroup<D> {
+export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoNames: (keyof D)[], cache?: CacheEntry<D>[]) => RepositoryGroup<D> {
 	return class {
 		[key: string]: any
 		readonly io: Readonly<IOProvider<X>>
 		cache?: CacheEntry<D>[]
 
-		constructor(config: object, dtoNames: (Extract<keyof D, "string">)[], cache?: CacheEntry<D>[]) {
+		constructor(config: object, dtoNames: (keyof D)[], cache?: CacheEntry<D>[]) {
 			try {
 				this.io = new ioProviderClass({ ...config, cache: cache })
 				this.cache = cache
@@ -44,10 +44,10 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 			}
 			console.assert(this.io !== undefined, `Repository group this.io after construction is still undefined`)
 			dtoNames.forEach(prop => {
-				this[prop as string] = this.createRepository(prop, this.cache) as Repository<D, typeof prop>
+				this[prop as string] = this.createRepository(prop as string, this.cache) as Repository<D, typeof prop>
 			})
 		}
-		protected createRepository<E extends Extract<keyof D, "string">>(e: E, cache?: CacheEntry<D>[]) {
+		protected createRepository<E extends string & keyof D>(e: E, cache?: CacheEntry<D>[]) {
 			return {
 				findAsync: async (id: string) => {
 					if (this.cache !== undefined) {

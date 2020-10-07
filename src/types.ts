@@ -3,8 +3,8 @@ import { ExtractByType, Obj, Primitive, FilterGroup } from "@sparkwave/standard"
 export interface Ctor<TArgs = {}, TObj = {}> { new(args: TArgs): TObj }
 
 type DTO = {
-	toStorage: Obj<Primitive> & { id?: string }
-	fromStorage: Obj<Primitive>
+	toStorage: Obj<any> & { id?: string }
+	fromStorage: Obj<any>
 }
 export type DTOsMap = { [key: string]: DTO }
 
@@ -26,7 +26,7 @@ export interface IOProvider<X = {}, D extends DTOsMap = DTOsMap> {
 	findAsync: <E extends keyof D>(args: { entity: E, id: string }) => Promise<D[E]["fromStorage"]>
 
 	/** get a set of entity objects */
-	getAsync: <E extends keyof D>(args: { entity: E, parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => Promise<D[E]["fromStorage"][]>
+	getAsync: <E extends keyof D>(args: { entity: E, parentId?: string, filters?: FilterGroup<ExtractByType<D[E]["fromStorage"], Primitive>> }) => Promise<D[E]["fromStorage"][]>
 	saveAsync: <E extends keyof D>(args: {
 		entity: E,
 		obj: D[E]["toStorage"][],
