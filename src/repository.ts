@@ -2,7 +2,7 @@
 import { FilterGroup } from "@sparkwave/standard"
 import { DTOsMap, IOProvider, Ctor, CacheEntry } from "./types"
 
-export interface RepositoryReadonly<D extends DTOsMap, E extends Extract<keyof D, "string">> {
+export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 	/** find one entity object with a specific id, throws exception if not found */
 	findAsync(id: string): Promise<D[E]["fromStorage"]>
 
@@ -13,7 +13,7 @@ export interface RepositoryReadonly<D extends DTOsMap, E extends Extract<keyof D
 	/** A method to remove an entry from the cache */
 	bustCache?(entry: CacheEntry<D>): () => void
 }
-export interface RepositoryEditable<D extends DTOsMap, E extends Extract<keyof D, "string">> extends RepositoryReadonly<D, E> {
+export interface RepositoryEditable<D extends DTOsMap, E extends keyof D> extends RepositoryReadonly<D, E> {
 	saveAsync: (obj: D[E]["toStorage"][]) => Promise<D[E]["fromStorage"][]>
 }
 export interface Repository<D extends DTOsMap, E extends keyof D> extends RepositoryEditable<D, E> {
