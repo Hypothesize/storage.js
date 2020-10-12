@@ -1,7 +1,7 @@
 
 import { singular } from "pluralize"
 import { FilterGroup } from "@sparkwave/standard"
-import { DTOsMap, IOProvider, Ctor, CacheEntry } from "./types"
+import { DTOsMap, IOProvider, Ctor, CacheEntry, EntityCache } from "./types"
 
 export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 	/** find one entity object with a specific id, throws exception if not found */
@@ -11,7 +11,7 @@ export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 	getAsync(args: { parentId: string, filters?: FilterGroup<D[E]["fromStorage"]> }): Promise<D[E]["fromStorage"][]>
 
 	/** A method to remove an entry from the cache */
-	bustCache(entry: CacheEntry<D>): () => void
+	bustCache(entry: CacheEntry<D, E>): () => void
 }
 export interface RepositoryEditable<D extends DTOsMap, E extends keyof D> extends RepositoryReadonly<D, E> {
 	saveAsync: (obj: D[E]["toStorage"][]) => Promise<D[E]["fromStorage"][]>
@@ -33,12 +33,12 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 	return class {
 		[key: string]: any
 		readonly io: Readonly<IOProvider<X>>
-		cache?: CacheEntry<D>[]
+		cache?: EntityCache<D>
 
 		constructor(config: object, dtoInfo: { [key in keyof D]: string }, cached: boolean) {
 			try {
 				this.io = new ioProviderClass({ ...config })
-				this.cache = cached === true ? [] : undefined
+				this.cache = cached === true ? {} as EntityCache<D> : undefined
 			}
 			catch (err) {
 				throw new Error(`Repository group constructor : ${err} `)
@@ -52,31 +52,30 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 			return {
 				findAsync: async (id: string) => {
 					if (this.cache !== undefined) {
-						if (this.cache.find(entry => entry.type === "single" && entry.key === id) === undefined) {
-							this.cache.push({ type: "single", key: id, content: this.io.findAsync({ entity: dto.name as string, id: id }) })
+						if (this.cache[dto.name].find(entry => entry.type === "single" && entry.entityId === id) === undefined) {
+							this.cache[dto.name].push({ type: "single", entityId: id, content: this.io.findAsync({ entity: dto.name as string, id: id }) })
 						}
-						return this.cache.find(entry => entry.type === "single" && entry.key === id)?.content
+						return this.cache[dto.name].find(entry => entry.type === "single" && entry.entityId === id)?.content
 					} else {
 						return this.io.findAsync({ entity: dto.name as string, id: id })
 					}
 				},
 				getAsync: async (selector: { parentId?: string, filters?: FilterGroup<D[E]["fromStorage"]> }) => {
 					if (this.cache !== undefined) {
-						if (this.cache.find(entry => entry.type === "multiple"
-							&& entry.keys.entity === dto.name
-							&& entry.keys.parentId === selector.parentId
-							&& entry.keys.filters === JSON.stringify(selector.filters)
+						if (this.cache[dto.name].find(entry => entry.type === "multiple"
+							&& entry.parentEntityId === selector.parentId
+							&& entry.filters === JSON.stringify(selector.filters)
 						) === undefined) {
-							this.cache.push({
+							this.cache[dto.name].push({
 								type: "multiple",
-								keys: { entity: dto.name, parentId: selector.parentId || "", filters: JSON.stringify(selector.filters) },
+								parentEntityId: selector.parentId || "",
+								filters: JSON.stringify(selector.filters),
 								content: this.io.getAsync({ entity: dto.name as string, parentId: selector?.parentId, filters: selector?.filters })
 							})
 						}
-						return this.cache.find(entry => entry.type === "multiple"
-							&& entry.keys.entity === dto.name
-							&& entry.keys.parentId === selector.parentId
-							&& entry.keys.filters === JSON.stringify(selector.filters)
+						return this.cache[dto.name].find(entry => entry.type === "multiple"
+							&& entry.parentEntityId === selector.parentId
+							&& entry.filters === JSON.stringify(selector.filters)
 						)?.content
 					}
 					else {
@@ -118,21 +117,20 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 							: { ids: args["ids"] }
 					})
 					: undefined,
-				bustCache: (entryToBust: CacheEntry<D>) => {
+				bustCache: (entryToBust: CacheEntry<D, E>) => {
 					if (this.cache) {
-						const entries = [...this.cache]
-						this.cache.length = 0
+						const entries = [...this.cache[dto.name]]
+						this.cache[dto.name].length = 0
 
 						entries.filter(entry => {
 							if (entryToBust.type === "single") {
-								return !(entry.type === "single" && entry.key === entryToBust.key)
+								return !(entry.type === "single" && entry.entityId === entryToBust.entityId)
 							}
 							else {
 								return !(entry.type === "multiple"
-									&& entry.keys.entity === entryToBust.keys.entity
-									&& entry.keys.parentId === entryToBust.keys.parentId)
+									&& entry.parentEntityId === entryToBust.parentEntityId)
 							}
-						}).forEach(entry => this.cache!.push(entry))
+						}).forEach(entry => this.cache![dto.name].push(entry))
 					}
 				}
 			} as Repository<D, E>
