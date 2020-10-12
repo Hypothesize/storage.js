@@ -24,11 +24,14 @@ export type RepositoryGroup<D extends DTOsMap> = {
 	[key in keyof D]: Repository<D, keyof D>
 }
 
+/** Each entity has an entry: key is the entity name, value is the entity parent's name (empty string if no parent) */
+type DTOInfo<D extends DTOsMap> = { [key in keyof D]: string }
+
 /** Generates a repository group from the io provider
  * @param ioProviderClass 
  * @param repos The individual repositories: tables, users...
  */
-export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoInfo: { [key in keyof D]: string }, cached: boolean) => RepositoryGroup<D> {
+export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOProvider<X, D>>): new (config: object, dtoInfo: DTOInfo<D>, cached: boolean) => RepositoryGroup<D> {
 	type DTOIndex = keyof D
 	return class {
 		[key: string]: any
