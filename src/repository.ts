@@ -1,6 +1,6 @@
 
 import { singular } from "pluralize"
-import { FilterGroup } from "@sparkwave/standard"
+import { FilterGroup, Dictionary, Obj } from "@sparkwave/standard"
 import { DTOsMap, IOProvider, Ctor, CacheEntry, EntityCache } from "./types"
 
 export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
@@ -38,7 +38,8 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 		constructor(config: object, dtoInfo: { [key in keyof D]: string }, cached: boolean) {
 			try {
 				this.io = new ioProviderClass({ ...config })
-				this.cache = cached === true ? {} as EntityCache<D> : undefined
+				const emptyCache = Dictionary.fromKeyValues(Object.keys(dtoInfo).map(key => [key, [] as CacheEntry<D, keyof D>[]])).asObject() as EntityCache<D>
+				this.cache = cached === true ? emptyCache : undefined
 			}
 			catch (err) {
 				throw new Error(`Repository group constructor : ${err} `)
