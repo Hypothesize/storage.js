@@ -51,6 +51,22 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 			Object.keys(dtoInfo).forEach(dtoName => {
 				this[dtoName] = this.createRepository({ name: dtoName as DTOIndex, parentName: dtoInfo[dtoName] as DTOIndex })
 			})
+			this.bustCache = (entityName: keyof D, entryToBust: CacheEntry<D, keyof D>) => {
+				if (this.cache) {
+					const entries = [...this.cache[entityName]]
+					this.cache[entityName].length = 0
+
+					entries.filter(entry => {
+						if (entryToBust.type === "single") {
+							return !(entry.type === "single" && entry.entityId === entryToBust.entityId)
+						}
+						else {
+							return !(entry.type === "multiple"
+								&& entry.parentEntityId === entryToBust.parentEntityId)
+						}
+					}).forEach(entry => this.cache![entityName].push(entry))
+				}
+			}
 		}
 		protected createRepository<E extends Extract<keyof D, "string">>(dto: { name: DTOIndex, parentName: DTOIndex }) {
 			return {
@@ -120,23 +136,7 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 							? { parentId: args["parentId"] }
 							: { ids: args["ids"] }
 					})
-					: undefined,
-				bustCache: (entryToBust: CacheEntry<D, E>) => {
-					if (this.cache) {
-						const entries = [...this.cache[dto.name]]
-						this.cache[dto.name].length = 0
-
-						entries.filter(entry => {
-							if (entryToBust.type === "single") {
-								return !(entry.type === "single" && entry.entityId === entryToBust.entityId)
-							}
-							else {
-								return !(entry.type === "multiple"
-									&& entry.parentEntityId === entryToBust.parentEntityId)
-							}
-						}).forEach(entry => this.cache![dto.name].push(entry))
-					}
-				}
+					: undefined
 			} as Repository<D, E>
 		}
 
