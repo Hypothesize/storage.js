@@ -1,6 +1,6 @@
 
 import { singular } from "pluralize"
-import { FilterGroup, Dictionary, Obj } from "@sparkwave/standard"
+import { FilterGroup, Dictionary } from "@sparkwave/standard"
 import { DTOsMap, IOProvider, Ctor, CacheEntry, EntityCache } from "./types"
 
 export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
