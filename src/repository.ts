@@ -113,7 +113,7 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 							result.id !== undefined ? this.bustCache({ type: "single", key: result.id }) : undefined
 
 							// We invalidate all getAsync cache entries for entities with the same parent (when adding a table, the getTable of that project will be refreshed)
-							const effectiveParentId = dto.parentName !== "" ? result[`${dto.parentName}Id`].toString() : ""
+							const effectiveParentId = dto.parentName !== "" ? result[`${singular(dto.parentName as string)}Id`].toString() : ""
 							this.bustCache({ type: "multiple", keys: { entity: dto.name, parentId: effectiveParentId } })
 						})
 					})
