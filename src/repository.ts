@@ -22,6 +22,8 @@ export interface Repository<D extends DTOsMap, E extends keyof D> extends Reposi
 }
 export type RepositoryGroup<D extends DTOsMap> = {
 	[key in keyof D]: Repository<D, keyof D>
+} & {
+	bustCache: BustCache<D>
 }
 
 /** Each entity has an entry: key is the entity name, value is the entity parent's name (empty string if no parent) */
