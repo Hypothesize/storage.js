@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable fp/no-mutation */
 import * as assert from "assert"
-import { Array__ } from "StdLib"
 
 export interface RepositoryReadonly<D extends DTOsMap, E extends keyof D> {
 	/** find one entity object with a specific id, throws exception if not found */
@@ -53,7 +54,9 @@ export function generate<X, D extends DTOsMap>(ioProviderClass: Ctor<object, IOP
 			} as Repository<D, E>
 		}
 
-		get extensions() { return this.io.extensions }
+		get extensions() { 
+			return this.io.extensions 
+		}
 	} as any
 }
 

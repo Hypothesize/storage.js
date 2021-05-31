@@ -1,2 +1,2 @@
-import * as Repository from './repository'
-export { Repository as default }
+export * from './core'
+export { RepositoryGroup, Repository, RepositoryReadonly, IOProvider, Schema, EntityType } from './types'
