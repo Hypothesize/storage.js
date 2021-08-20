@@ -91,7 +91,7 @@ export function repositoryGroupFactory<S extends Schema, Cfg extends Obj | void 
 								}
 
 								// Append new objects to base vector cache, and remove all other vectors cache entries
-								const baseVector = _cache[e].vectors["N/A"]
+								const baseVector = _cache[e].vectors["N/A"] || [Promise.resolve([]), []]
 								_cache[e].vectors = {
 									"N/A": [
 										baseVector[0].then(vector => [...vector, ...objects]),
@@ -115,7 +115,7 @@ export function repositoryGroupFactory<S extends Schema, Cfg extends Obj | void 
 
 								forEach(objects, (datum) => {
 									const idFieldname = args.schema[e].idField!
-									_cache[e].objects[String(datum[idFieldname])][0] = datum
+									_cache[e].objects[String(datum[idFieldname])] = new Tuple(datum, new Date().getTime())
 								})
 							},
 
