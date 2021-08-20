@@ -47,9 +47,9 @@ export function repositoryGroupFactory<S extends Schema, Cfg extends Obj | void 
 					(entry === undefined) || (new Date().getTime() - entry[1] > CACHE_EXPIRATION_MILLISECONDS)
 
 				return {
-					findAsync: async (id) => {
+					findAsync: async (id, refreshCache?: boolean) => {
 						const objects = _cache[e].objects
-						if (ioProvider && invalidOrStale(objects[id])) {
+						if (ioProvider && (invalidOrStale(objects[id]) || refreshCache)) {
 							// eslint-disable-next-line fp/no-mutation
 							objects[id] = new Tuple(
 								await ioProvider.findAsync({ entity: e, id: id }),
@@ -59,11 +59,11 @@ export function repositoryGroupFactory<S extends Schema, Cfg extends Obj | void 
 						return objects[id][0]
 					},
 
-					getAsync: async (filter) => {
+					getAsync: async (filter, refreshCache?: boolean) => {
 						const filtersKey = filter ? JSON.stringify(filter) : "N/A"
 						const vectors = _cache[e].vectors
 						if (ioProvider) {
-							if (invalidOrStale(vectors[filtersKey])) {
+							if (invalidOrStale(vectors[filtersKey]) || refreshCache) {
 								vectors[filtersKey] = [
 									ioProvider.getAsync({ entity: e, filters: filter }),
 									new Date().getTime()
