@@ -115,7 +115,7 @@ export function repositoryGroupFactory<S extends Schema, Cfg extends Obj | void 
 
 								forEach(objects, (datum) => {
 									const idFieldname = args.schema[e].idField!
-									_cache[e].objects[String(datum[idFieldname])][0] = datum
+									_cache[e].objects[String(datum[idFieldname])] = new Tuple(datum, new Date().getTime())
 								})
 							},
 
