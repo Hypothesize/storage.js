@@ -121,7 +121,7 @@ export function repositoryGroupFactory<S extends Schema, Cfg extends Obj | void 
 
 							deleteAsync: async (id) => {
 								if (ioProvider) {
-									ioProvider.deleteAsync({ entity: e, id })
+									await ioProvider.deleteAsync({ entity: e, id })
 								}
 								_cache[e].vectors = {}
 								delete _cache[e].objects[String(id)]
