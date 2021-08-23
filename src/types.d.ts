@@ -92,7 +92,7 @@ export interface RepositoryReadonly<T extends Obj> {
 	/** Get entity objects from underlying data-source with optional filters...
 	 ** If refreshCache is true, new objects will be queried from the data-source even if a cache entry already exists (for instance, if the data-source changed through another mean than the repository methods)
 	 */
-	getAsync(filters?: FilterGroup<T>, refreshCache?: boolean): Promise<T[]>
+	getAsync(filters?: FilterGroup, refreshCache?: boolean): Promise<T[]>
 }
 export interface Repository<T extends Obj /*& { id: string | number }*/> extends RepositoryReadonly<T> {
 	/** Insert one or more entity objects in underlying data source
