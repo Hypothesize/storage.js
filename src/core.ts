@@ -91,7 +91,7 @@ export function repositoryGroupFactory<S extends Schema, Cfg extends Obj | void 
 								}
 
 								// Append new objects to base vector cache, and remove all other vectors cache entries
-								const baseVector = _cache[e].vectors["N/A"] || [Promise.resolve([]), []]
+								const baseVector = _cache[e].vectors["N/A"] || [Promise.resolve([]), new Date().getTime()]
 								_cache[e].vectors = {
 									"N/A": [
 										baseVector[0].then(vector => [...vector, ...objects]),
