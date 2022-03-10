@@ -33,19 +33,14 @@ export type PrimitiveFieldType<F extends PrimitiveField> = (F extends { type: Pr
 	? PrimitiveType<F>
 	: never
 )*/
-export declare type ObjectFieldType<F extends ObjectField> = (F extends "object" ? Obj : F extends {
-	type: "object";
-	valueType: PrimitiveField;
-	nullable?: boolean;
-} ? NullableType<PrimitiveFieldType<F["valueType"]>, F["nullable"]> : F extends {
-	type: "object";
-	valueType: ArrayField;
-	nullable?: boolean;
-} ? ArrayFieldType<F["valueType"]> : F extends {
-	type: "object";
-	valueType: Obj<Field>;
-	nullable?: boolean;
-} ? NullableType<{ [k in keyof F["valueType"]]?: FieldType<F["valueType"][k]> }, F["nullable"]>
+export declare type ObjectFieldType<F extends ObjectField> = (F extends "object"
+	? Obj
+	: F extends { type: "object"; valueType: PrimitiveField; nullable?: boolean; }
+	? NullableType<PrimitiveFieldType<F["valueType"]>, F["nullable"]>
+	: F extends { type: "object"; valueType: ArrayField; nullable?: boolean; }
+	? ArrayFieldType<F["valueType"]>
+	: F extends { type: "object"; valueType: Obj<Field>; nullable?: boolean; }
+	? NullableType<{ [k in keyof F["valueType"]]?: FieldType<F["valueType"][k]> }, F["nullable"]>
 	: never
 )
 
