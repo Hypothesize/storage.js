@@ -136,3 +136,43 @@ export type EntityCacheGroup<S extends Schema> = {
 		vectors: Obj<[vector: Promise<T<S, e>[]>, timeStamp: number], FilterKey>
 	}
 }
+
+
+/**
+ * TYPING TESTS
+ */
+
+const testSchema = {
+	testEntity: {
+		fields: {
+			requiredNumber: "number",
+			optionalNumber: { type: "number", nullable: true },
+			textual: "string",
+			generalObject: "object",
+			specificObject: { type: "object", valueType: { numerical: "number", textual: "string" } },
+			generalArray: "array",
+			arrayOfNumber: { type: "array", arrayType: "number" },
+		},
+		readonly: true,
+		idField: "id"
+	}
+} as const
+
+export type DbSchema = typeof testSchema
+
+type TestEntityType = EntityType<typeof testSchema["testEntity"]>
+
+const TestEntity: TestEntityType = {
+	requiredNumber: 67,
+	optionalNumber: undefined,
+	textual: "Ha",
+	generalObject: { random: "Ha", anotherProp: 67 },
+	specificObject: { numerical: 9, textual: "Ha" },
+	generalArray: [null, 6, "Blue"],
+	arrayOfNumber: [9]
+}
+
+// Failing
+// const wrongSpecificObject: TestEntityType["specificObject"] = { wrongProp: 56 }
+// const wrongSpecificArray: TestEntityType["arrayOfNumber"] = ["Blue"]
+// const absentRequiredProp: TestEntityType["requiredNumber"] = undefined
