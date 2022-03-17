@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-types */
-import { Obj, Tuple, ExtractByType, KeysByType, Filter, FilterGroup } from "@sparkwave/standard"
+import { Obj, Filter, FilterGroup } from "@sparkwave/standard"
 
 export interface Ctor<TArgs = unknown, TObj = Obj> { new(args: TArgs): TObj }
 export type NullableType<T, Nullable extends boolean | undefined> = Nullable extends true ? (T | null) : T
@@ -126,3 +126,32 @@ export type EntityCacheGroup<S extends Schema> = {
 		vectors: Obj<[vector: Promise<EntityType<S[e]>[]>, timeStamp: number], FilterKey>
 	}
 }
+
+/*****************
+ * TYPING TESTS
+ ****************/
+
+ const testSchema = {
+	testEntity: {
+		fields: {
+			requiredNumber: "number",
+			optionalNumber: { type: "number", nullable: true },
+			textual: "string",
+		},
+		readonly: true,
+		idField: "id"
+	}
+} as const
+
+type TestSchema = typeof testSchema
+
+type TestEntityType = EntityType<TestSchema["testEntity"]>
+
+const literalTestEntity: TestEntityType = {
+	requiredNumber: 5,
+	optionalNumber: null,
+	textual: "Blue"
+}
+
+// Failing
+// const absentRequiredProp: TestEntityType["requiredNumber"] = null
