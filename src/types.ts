@@ -131,27 +131,69 @@ export type EntityCacheGroup<S extends Schema> = {
  * TYPING TESTS
  ****************/
 
- const testSchema = {
+const readonlySchema = {
 	testEntity: {
 		fields: {
 			requiredNumber: "number",
 			optionalNumber: { type: "number", nullable: true },
 			textual: "string",
 		},
-		readonly: true,
-		idField: "id"
+		readonly: true
 	}
 } as const
 
-type TestSchema = typeof testSchema
+const writableSchema = {
+	testEntity: {
+		fields: {
+			requiredNumber: "number",
+		},
+		readonly: false
+	}
+} as const
 
-type TestEntityType = EntityType<TestSchema["testEntity"]>
+type ReadonlyTestSchema = typeof readonlySchema
+type WritableTestSchema = typeof writableSchema
 
-const literalTestEntity: TestEntityType = {
+const literalTestEntity: EntityType<ReadonlyTestSchema["testEntity"]> = {
 	requiredNumber: 5,
 	optionalNumber: null,
 	textual: "Blue"
 }
 
+const readOnlyRepositoryGroup: RepositoryGroup<{}, ReadonlyTestSchema> = (cfg) => ({
+	testEntity: {
+		getAsync: async () => {
+			return [literalTestEntity]
+		},
+		findAsync: async () => {
+			return literalTestEntity
+		},
+	},
+	extensions: {}
+})
+
+const writableRepositoryGroup: RepositoryGroup<{}, WritableTestSchema> = (cfg) => ({
+	testEntity: {
+		getAsync: async () => {
+			return [literalTestEntity]
+		},
+		findAsync: async () => {
+			return literalTestEntity
+		},
+		insertAsync: async () => { },
+		updateAsync: async () => { },
+		deleteAsync: async () => { }
+	},
+	extensions: {}
+})
+
 // Failing
 // const absentRequiredProp: TestEntityType["requiredNumber"] = null
+
+// const writableRepositoryGroupWithoutWriteMethods: RepositoryGroup<{}, WritableTestSchema> = (cfg) => ({
+// 	testEntity: {
+// 		getAsync: async () => { return [literalTestEntity] },
+// 		findAsync: async () => { return literalTestEntity },
+// 	},
+// 	extensions: {}
+// })
