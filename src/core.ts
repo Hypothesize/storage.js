@@ -28,7 +28,8 @@ export function repositoryGroupFactory<S extends Schema, Cfg extends Obj | void 
 		/** io provider factory; use cache alone if not provided */
 		io?: (cfg: Cfg) => IOProvider<S, X>,
 
-		// cacheProvider: { get; set; }
+		/** The time (in ms) after which cache entries are invalidated. Set to 0 to always retrieve fresh entries */
+		cacheExpiration?: number
 	}):
 	(cfg: Cfg) => RepositoryGroup<S, typeof args.io extends undefined ? undefined : X> {
 
@@ -42,7 +43,7 @@ export function repositoryGroupFactory<S extends Schema, Cfg extends Obj | void 
 			const ioProvider = args.io ? args.io(config) : undefined
 
 			const repositoryFactory = <E extends keyof S>(e: E, _cache: EntityCacheGroup<S>) => {
-				const CACHE_EXPIRATION_MILLISECONDS = 10 * 60 * 1000 // 10 minutes
+				const CACHE_EXPIRATION_MILLISECONDS = args.cacheExpiration !== undefined ? args.cacheExpiration : 10 * 60 * 1000 // 10 minutes
 				const invalidOrStale = <T>(entry?: [T, number]) =>
 					(entry === undefined) || (new Date().getTime() - entry[1] > CACHE_EXPIRATION_MILLISECONDS)
 
