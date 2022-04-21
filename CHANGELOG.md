@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://www.github.com/Hypothesize/storage.js/compare/v1.5.0...v1.6.0) (2022-04-21)
+
+
+### Features
+
+* ([#52](https://www.github.com/Hypothesize/storage.js/issues/52)) Custom cache delay ([72c368b](https://www.github.com/Hypothesize/storage.js/commit/72c368b06e428ad85e4a32824fc73dc9163e0269))
+
 ## [1.5.0](https://www.github.com/Hypothesize/storage.js/compare/v1.4.3...v1.5.0) (2022-04-04)
 
 
