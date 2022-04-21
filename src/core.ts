@@ -21,7 +21,9 @@ export function generateRepoGroupFn<S extends Schema, Cfg extends Obj | void = v
 	{
 		schema: S,
 		ioProvider?: (cfg: Cfg) => IOProvider<S>,
-		extensions?: (io: IOProvider<S>) => X
+		extensions?: (io: IOProvider<S>) => X,
+		/** Time, in ms, after which a cache entry is considered expired */
+		cacheExpiration?: number
 	}): RepositoryGroup<Cfg, S, typeof args.extensions extends undefined ? undefined : X> {
 
 
@@ -47,7 +49,7 @@ export function generateRepoGroupFn<S extends Schema, Cfg extends Obj | void = v
 		try {
 			const io = args.ioProvider ? args.ioProvider(config) : undefined
 			const repositoryFactory = <E extends keyof S>(e: E, _cache: EntityCacheGroup<S>) => {
-				const CACHE_EXPIRATION_MILLISECONDS = 10 * 60 * 1000 // 10 minutes
+				const CACHE_EXPIRATION_MILLISECONDS = args.cacheExpiration !== undefined ? args.cacheExpiration : 10 * 60 * 1000 // 10 minutes
 				const invalidOrStale = <T>(entry?: [T, number]) =>
 					(entry === undefined) || (new Date().getTime() - entry[1] > CACHE_EXPIRATION_MILLISECONDS)
 
