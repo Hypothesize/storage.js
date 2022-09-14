@@ -6,12 +6,13 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable brace-style */
 
-import { Obj, Tuple, keys, values, fromKeyValues, DataTable, Filter, FilterGroup } from "@sparkwave/standard"
+import { Obj, Tuple, keys, values, fromKeyValues, DataTable, Filter, FilterGroup, forEach } from "@sparkwave/standard"
 import {
 	EntityCacheGroup, EntityType, Schema,
 	IOProvider, Repository, RepositoryReadonly, RepositoryGroup, RepositoryGroupCtor
 } from "./types"
-// import { asIOProvider, DbProviderCtor, PostgresDbProvider, DbProvider } from "./db"
+
+const NO_FILTERS_KEY = "N/A"
 
 /** Generates a repository group class from the io provider
  * @param schema The entity model schema
@@ -67,7 +68,7 @@ export function generateRepoGroupFn<S extends Schema, Cfg extends Obj | void = v
 					},
 
 					getAsync: async (filter, refreshCache?: boolean) => {
-						const filtersKey = filter ? JSON.stringify(filter) : "N/A"
+						const filtersKey = filter ? JSON.stringify(filter) : NO_FILTERS_KEY
 						const vectors = _cache[e].vectors
 						if (io) {
 							if (invalidOrStale(vectors[filtersKey]) || refreshCache) {
@@ -79,8 +80,8 @@ export function generateRepoGroupFn<S extends Schema, Cfg extends Obj | void = v
 						}
 						else {
 							if (vectors[filtersKey] === undefined) {
-								const vals = vectors["N/A"]
-									? await vectors["N/A"][0]
+								const vals = vectors[NO_FILTERS_KEY]
+									? await vectors[NO_FILTERS_KEY][0]
 									: values(_cache[e].objects).map(v => v[0])
 								const dataTable = DataTable.fromRows(vals)
 								const newData = (filter ? dataTable.filter({ filter: filter as any }) : dataTable).rowObjects
@@ -92,53 +93,50 @@ export function generateRepoGroupFn<S extends Schema, Cfg extends Obj | void = v
 
 					...(args.schema[e]["readonly"] === false ?
 						{
-							insertAsync: async (obj) => {
+							insertAsync: async (objects) => {
 								if (io) {
-									await io.insertAsync({ entity: e, obj })
+									await io.insertAsync({ entity: e, objects })
 								}
 
 								// Append new objects to base vector cache, and remove all other vectors cache entries
-								const baseVector = _cache[e].vectors["N/A"] || [Promise.resolve([]), new Date().getTime()]
+								const baseVector = _cache[e].vectors[NO_FILTERS_KEY] || [Promise.resolve([]), new Date().getTime()]
 								_cache[e].vectors = {
-									"N/A": [
-										baseVector[0].then(vector => [...vector, obj]),
+									[NO_FILTERS_KEY]: [
+										baseVector[0].then(vector => [...vector, ...objects]),
 										baseVector[1]
 									]
 								}
 
-								// forEach(objects, (datum) => {
-								// 	const idFieldname = schema[e].idField!
-								// 	_cache[e].objects[String(datum[idFieldname])] = new Tuple(datum, new Date().getTime())
-								// })
-
-								const idFieldname = args.schema[e].idField!
-								_cache[e].objects[String(obj[idFieldname])] = new Tuple(obj, new Date().getTime())
-
+								forEach(objects, (datum) => {
+									const idFieldname = args.schema[e].idField!
+									_cache[e].objects[String(datum[idFieldname])] = new Tuple(datum, new Date().getTime())
+								})
 							},
 
-							updateAsync: async (obj) => {
+							updateAsync: async (objects) => {
 								if (io) {
-									await io.updateAsync({ entity: e, obj })
+									await io.updateAsync({ entity: e, objects })
 								}
 
 								// Remove all vectors cache entries
 								_cache[e].vectors = {}
 
-								// forEach(objects, (datum) => {
-								// 	const idFieldname = schema[e].idField!
-								// 	_cache[e].objects[String(datum[idFieldname])] = new Tuple(datum, new Date().getTime())
-								// })
-								const idFieldname = args.schema[e].idField!
-								_cache[e].objects[String(obj[idFieldname])] = new Tuple(obj, new Date().getTime())
+								forEach(objects, (datum) => {
+									const idFieldname = args.schema[e].idField!
+									_cache[e].objects[String(datum[idFieldname])] = new Tuple(datum, new Date().getTime())
+								})
 
 							},
 
-							deleteAsync: async (id) => {
+							deleteAsync: async (ids) => {
 								if (io) {
-									await io.deleteAsync({ entity: e, id })
+									await io.deleteAsync({ entity: e, ids })
 								}
+
 								_cache[e].vectors = {}
-								delete _cache[e].objects[String(id)]
+								forEach(ids, (id) => {
+									delete _cache[e].objects[String(id)]
+								})
 							}
 						}
 
@@ -196,7 +194,7 @@ export function generateRepoGroupClass<S extends Schema, C extends Obj | void = 
 		}
 
 		async getAsync<E extends keyof S>(entity: E, filter: Filter | FilterGroup, refreshCache?: boolean) {
-			const filtersKey = filter ? JSON.stringify(filter) : "N/A"
+			const filtersKey = filter ? JSON.stringify(filter) : NO_FILTERS_KEY
 			const vectors = this._cache[entity].vectors
 			if (this._io) {
 				if (this.invalidOrStale(vectors[filtersKey]) || refreshCache) {
@@ -208,8 +206,8 @@ export function generateRepoGroupClass<S extends Schema, C extends Obj | void = 
 			}
 			else {
 				if (vectors[filtersKey] === undefined) {
-					const vals = vectors["N/A"]
-						? await vectors["N/A"][0]
+					const vals = vectors[NO_FILTERS_KEY]
+						? await vectors[NO_FILTERS_KEY][0]
 						: values(this._cache[entity].objects).map(v => v[0])
 					const dataTable = DataTable.fromRows(vals)
 					const newData = (filter ? dataTable.filter({ filter: filter as any }) : dataTable).rowObjects
@@ -219,53 +217,48 @@ export function generateRepoGroupClass<S extends Schema, C extends Obj | void = 
 			return vectors[filtersKey][0]
 		}
 
-		async insertAsync<E extends keyof S>(entity: E, obj: EntityType<S[E]>) {
+		async insertAsync<E extends keyof S>(entity: E, objects: EntityType<S[E]>[]) {
 			if (this._io) {
-				await this._io.insertAsync({ entity, obj })
+				await this._io.insertAsync({ entity, objects })
 			}
 
 			// Append new objects to base vector cache, and remove all other vectors cache entries
-			const baseVector = this._cache[entity].vectors["N/A"] || [Promise.resolve([]), new Date().getTime()]
+			const baseVector = this._cache[entity].vectors[NO_FILTERS_KEY] || [Promise.resolve([]), new Date().getTime()]
 			this._cache[entity].vectors = {
-				"N/A": [
-					baseVector[0].then(vector => [...vector, obj]),
+				[NO_FILTERS_KEY]: [
+					baseVector[0].then(vector => [...vector, ...objects]),
 					baseVector[1]
 				]
 			}
 
-			// forEach(objects, (datum) => {
-			// 	const idFieldname = schema[e].idField!
-			// 	_cache[e].objects[String(datum[idFieldname])] = new Tuple(datum, new Date().getTime())
-			// })
-
-			const idFieldname = schema[entity].idField!
-			this._cache[entity].objects[String(obj[idFieldname])] = new Tuple(obj, new Date().getTime())
-
+			forEach(objects, (datum) => {
+				const idFieldname = schema[entity].idField!
+				this._cache[entity].objects[String(datum[idFieldname])] = new Tuple(datum, new Date().getTime())
+			})
 		}
 
-		async updateAsync<E extends keyof S>(entity: E, obj: EntityType<S[E]>) {
+		async updateAsync<E extends keyof S>(entity: E, objects: EntityType<S[E]>[]) {
 			if (this._io) {
-				await this._io.updateAsync({ entity, obj })
+				await this._io.updateAsync({ entity, objects })
 			}
 
 			// Remove all vectors cache entries
 			this._cache[entity].vectors = {}
 
-			// forEach(objects, (datum) => {
-			// 	const idFieldname = schema[e].idField!
-			// 	_cache[e].objects[String(datum[idFieldname])] = new Tuple(datum, new Date().getTime())
-			// })
-			const idFieldname = schema[entity].idField!
-			this._cache[entity].objects[String(obj[idFieldname])] = new Tuple(obj, new Date().getTime())
-
+			forEach(objects, (datum) => {
+				const idFieldname = schema[entity].idField!
+				this._cache[entity].objects[String(datum[idFieldname])] = new Tuple(datum, new Date().getTime())
+			})
 		}
 
-		async deleteAsync<E extends keyof S>(entity: E, id: any) {
+		async deleteAsync<E extends keyof S>(entity: E, ids: string[]) {
 			if (this._io) {
-				await this._io.deleteAsync({ entity, id })
+				await this._io.deleteAsync({ entity, ids })
 			}
 			this._cache[entity].vectors = {}
-			delete this._cache[entity].objects[String(id)]
+			forEach(ids, (id) => {
+				delete this._cache[entity].objects[String(id)]
+			})
 		}
 	}
 }
