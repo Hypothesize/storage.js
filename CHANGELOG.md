@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://www.github.com/Hypothesize/storage.js/compare/v1.6.0...v1.7.0) (2022-09-15)
+
+
+### Features
+
+* ([#55](https://www.github.com/Hypothesize/storage.js/issues/55)) Allow multi-entity insertion and update ([b8b7f67](https://www.github.com/Hypothesize/storage.js/commit/b8b7f6771e61390610becaa03453e741fbe660f1))
+
 ## [1.6.0](https://www.github.com/Hypothesize/storage.js/compare/v1.5.0...v1.6.0) (2022-04-21)
 
 
