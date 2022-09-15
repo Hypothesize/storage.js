@@ -73,10 +73,10 @@ export type IOProvider<S extends Schema = Schema> = {
 	findAsync: <E extends keyof S>(_: { entity: E, id: string }) => Promise<EntityType<S[E]>>
 	getAsync: <E extends keyof S>(_: { entity: E, filter?: Filter | FilterGroup }) => Promise<EntityType<S[E]>[]>
 
-	insertAsync: <E extends keyof S>(_: { entity: E, obj: EntityType<S[E]> }) => Promise<void>
-	updateAsync: <E extends keyof S>(_: { entity: E, obj: EntityType<S[E]> }) => Promise<void>
+	insertAsync: <E extends keyof S>(_: { entity: E, objects: EntityType<S[E]>[] }) => Promise<void>
+	updateAsync: <E extends keyof S>(_: { entity: E, objects: EntityType<S[E]>[] }) => Promise<void>
 
-	deleteAsync: <E extends keyof S>(_: { entity: E, id: string }) => Promise<void>
+	deleteAsync: <E extends keyof S>(_: { entity: E, ids: string[] }) => Promise<void>
 }
 
 export interface RepositoryReadonly<T extends Obj> {
@@ -92,21 +92,21 @@ export interface RepositoryReadonly<T extends Obj> {
 	 */
 	getAsync(filter?: Filter | FilterGroup, refreshCache?: boolean): Promise<T[]>
 }
-export interface Repository<T extends Obj /*& { id: string | number }*/> extends RepositoryReadonly<T> {
+export interface Repository<T extends Obj> extends RepositoryReadonly<T> {
 	/** Insert one or more entity objects in underlying data source
 	 * Throws an exception if any id conflict occurs 
 	 */
-	insertAsync: (objects: T) => Promise<void>
+	insertAsync: (objects: T[]) => Promise<void>
 
 	/** Update one or more objects in underlying data source
 	 * Throws an exception if any id is not found in the data source 
 	 */
-	updateAsync: (objects: T) => Promise<void>
+	updateAsync: (objects: T[]) => Promise<void>
 
 	/** Delete one of more entity objects, identified by the passed ids, in underlying data source.
 	 * Throws an error if any of the ids are not found
 	 */
-	deleteAsync: (id: string) => Promise<void>
+	deleteAsync: (id: string[]) => Promise<void>
 }
 
 export type RepositoryGroup<Cfg, S extends Schema, X extends Obj = {}> = (config: Cfg) => (
@@ -138,17 +138,17 @@ export type RepositoryGroupCtor<Cfg, S extends Schema, X extends Obj = {}> = {
 		/** Insert one or more entity objects in underlying data source
 		 * Throws an exception if any id conflict occurs 
 		 */
-		insertAsync<E extends keyof S>(entity: E, obj: EntityType<S[E]>): Promise<void>
+		insertAsync<E extends keyof S>(entity: E, objects: EntityType<S[E]>[]): Promise<void>
 
 		/** Update one or more objects in underlying data source
 		 * Throws an exception if any id is not found in the data source 
 		 */
-		updateAsync<E extends keyof S>(entity: E, obj: EntityType<S[E]>): Promise<void>
+		updateAsync<E extends keyof S>(entity: E, objects: EntityType<S[E]>[]): Promise<void>
 
 		/** Delete one of more entity objects, identified by the passed ids, in underlying data source.
 		 * Throws an error if any of the ids are not found
 		 */
-		deleteAsync<E extends keyof S>(entity: E, id: string): Promise<void>
+		deleteAsync<E extends keyof S>(entity: E, ids: string[]): Promise<void>
 
 		extensions: X
 	}
