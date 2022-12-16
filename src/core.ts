@@ -22,7 +22,7 @@ export function generateRepoGroupFn<S extends Schema, Cfg extends Obj | void = v
 	{
 		schema: S,
 		ioProvider?: (cfg: Cfg) => IOProvider<S>,
-		extensions?: (io: IOProvider<S>) => X,
+		extensions?: (cfg: Cfg, io: IOProvider<S>) => X,
 		/** Time, in ms, after which a cache entry is considered expired */
 		cacheExpiration?: number
 	}): RepositoryGroup<Cfg, S, typeof args.extensions extends undefined ? undefined : X> {
@@ -149,7 +149,7 @@ export function generateRepoGroupFn<S extends Schema, Cfg extends Obj | void = v
 
 			return {
 				...fromKeyValues(keys(args.schema).map(e => new Tuple(e, repositoryFactory(e, cache)))),
-				extensions: (args.extensions && io ? args.extensions(io) : undefined) as typeof args.extensions extends undefined ? undefined : X
+				extensions: (args.extensions && io ? args.extensions(config, io) : undefined) as typeof args.extensions extends undefined ? undefined : X
 			}
 		}
 		catch (err) {
