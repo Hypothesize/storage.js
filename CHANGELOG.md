@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://www.github.com/Hypothesize/storage.js/compare/v1.7.0...v1.8.0) (2023-05-08)
+
+
+### Features
+
+* 64: Fix to ObjectFieldType ([edb7157](https://www.github.com/Hypothesize/storage.js/commit/edb71577e4ab628660ac525663232dfaf99274b6))
+
 ## [1.7.0](https://www.github.com/Hypothesize/storage.js/compare/v1.6.0...v1.7.0) (2022-09-15)
 
 

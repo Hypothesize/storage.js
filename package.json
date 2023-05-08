@@ -1,6 +1,6 @@
 {
 	"name": "@sparkwave/storage",
-	"version": "1.7.0",
+	"version": "1.8.0",
 	"description": "Datasource access through the repository pattern in Javascript/TypeScript",
 	"main": "index.js",
 	"types": "index.d.ts",
