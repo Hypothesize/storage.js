@@ -15,6 +15,7 @@
 			"dom.iterable",
 			"esnext.asynciterable"
 		],
+		"allowJs": false,
 		"strict": true,
 		"keyofStringsOnly": true,
 		"strictNullChecks": true,
@@ -24,5 +25,6 @@
 	},
 	"include": [
 		"./src",
+		"./tests"
 	]
 }
