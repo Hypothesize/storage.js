@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable brace-style */
 
-import { Obj, Tuple, keys, values, fromKeyValues, DataTable, Filter, FilterGroup, forEach } from "@sparkwave/standard"
+import { Obj, Tuple, keys, values, objectFromTuples, DataTable, Filter, FilterGroup, forEach } from "@sparkwave/standard"
 import {
 	EntityCacheGroup, EntityType, Schema,
 	IOProvider, Repository, RepositoryReadonly, RepositoryGroup, RepositoryGroupCtor
@@ -42,7 +42,7 @@ export function generateRepoGroupFn<S extends Schema, Cfg extends Obj | void = v
 	}*/
 
 	return (config: Cfg) => {
-		const cache: EntityCacheGroup<S> = fromKeyValues(keys(args.schema).map(e => new Tuple(e, ({
+		const cache: EntityCacheGroup<S> = objectFromTuples(keys(args.schema).map(e => new Tuple(e, ({
 			objects: {},
 			vectors: {}
 		}))))
@@ -148,7 +148,7 @@ export function generateRepoGroupFn<S extends Schema, Cfg extends Obj | void = v
 			}
 
 			return {
-				...fromKeyValues(keys(args.schema).map(e => new Tuple(e, repositoryFactory(e, cache)))),
+				...objectFromTuples(keys(args.schema).map(e => new Tuple(e, repositoryFactory(e, cache)))),
 				extensions: (args.extensions && io ? args.extensions(io) : undefined) as typeof args.extensions extends undefined ? undefined : X
 			}
 		}
@@ -175,7 +175,7 @@ export function generateRepoGroupClass<S extends Schema, C extends Obj | void = 
 		}
 
 		constructor(config: C) {
-			this._cache = fromKeyValues(keys(schema).map(e => new Tuple(e, ({ objects: {}, vectors: {} }))))
+			this._cache = objectFromTuples(keys(schema).map(e => new Tuple(e, ({ objects: {}, vectors: {} }))))
 			this._io = io ? io(config) : undefined
 
 			this.extensions = (ext && this._io ? ext(this._io) : undefined) as typeof ext extends undefined ? undefined : X
