@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.8.1](https://www.github.com/Hypothesize/storage.js/compare/v1.8.0...v1.8.1) (2024-02-26)
+
+
+### Bug Fixes
+
+* 70: Using the latest version of the standard library ([56b2bbc](https://www.github.com/Hypothesize/storage.js/commit/56b2bbc6a779ab955160ceb644e31a54d1a50eb4))
+
 ## [1.8.0](https://www.github.com/Hypothesize/storage.js/compare/v1.7.0...v1.8.0) (2023-05-08)
 
 
