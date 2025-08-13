@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.2](https://github.com/Hypothesize/storage.js/compare/v1.8.1...v1.8.2) (2025-08-13)
+
+
+### Bug Fixes
+
+* Feature/dependencies fixes aug 2025 ([#79](https://github.com/Hypothesize/storage.js/issues/79)) ([c4515bb](https://github.com/Hypothesize/storage.js/commit/c4515bbb9131f77e24022e1da57c0f8639c4bf29))
+* update dependencies ([#77](https://github.com/Hypothesize/storage.js/issues/77)) ([acd0c66](https://github.com/Hypothesize/storage.js/commit/acd0c6650df4fcc8be51fabf53873a0af7091ad4))
+
 ### [1.8.1](https://www.github.com/Hypothesize/storage.js/compare/v1.8.0...v1.8.1) (2024-02-26)
 
 
